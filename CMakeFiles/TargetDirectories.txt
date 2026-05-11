@@ -1,0 +1,5 @@
+/home/zx/Documents/progi/lab2/build/CMakeFiles/edit_cache.dir
+/home/zx/Documents/progi/lab2/build/CMakeFiles/rebuild_cache.dir
+/home/zx/Documents/progi/lab2/build/src/CMakeFiles/lab2_gtk.dir
+/home/zx/Documents/progi/lab2/build/src/CMakeFiles/edit_cache.dir
+/home/zx/Documents/progi/lab2/build/src/CMakeFiles/rebuild_cache.dir
