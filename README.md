@@ -19,14 +19,3 @@ cmake --build .
 
 
 
-static_cast почему индекс такого типа   
-
-
-        LinkedList<T> newList;
-        for (size_t i = 0; i < items->GetLength(); ++i) {
-            if (static_cast<int>(i) != index) {
-                newList.Append(items->Get(i));
-            }
-
-
-патерн mvc mvvm

@@ -37,7 +37,7 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList& other) {
 
 template<typename T>
 typename LinkedList<T>::Node* LinkedList<T>::getNode(size_t index) const {
-    if (index >= length) throw IndexOutOfRange("LinkedList::getNode: index out of range");
+    if (index >= length) throw IndexOutOfRange("LinkedList::getNode: индекс выходит за пределы");
 
     Node* cur;
     if (index < length / 2) {
@@ -52,25 +52,25 @@ typename LinkedList<T>::Node* LinkedList<T>::getNode(size_t index) const {
 
 template<typename T>
 T& LinkedList<T>::GetFirst() {
-    if (!length) throw EmptyContainerError("LinkedList::GetFirst: list is empty");
+    if (!length) throw EmptyContainerError("LinkedList::GetFirst: список пуст");
     return head->data;
 }
 
 template<typename T>
 const T& LinkedList<T>::GetFirst() const {
-    if (!length) throw EmptyContainerError("LinkedList::GetFirst: list is empty");
+    if (!length) throw EmptyContainerError("LinkedList::GetFirst: список пуст");
     return head->data;
 }
 
 template<typename T>
 T& LinkedList<T>::GetLast() {
-    if (!length) throw EmptyContainerError("LinkedList::GetLast: list is empty");
+    if (!length) throw EmptyContainerError("LinkedList::GetLast: список пуст");
     return tail->data;
 }
 
 template<typename T>
 const T& LinkedList<T>::GetLast() const {
-    if (!length) throw EmptyContainerError("LinkedList::GetLast: list is empty");
+    if (!length) throw EmptyContainerError("LinkedList::GetLast: список пуст");
     return tail->data;
 }
 
@@ -104,7 +104,7 @@ void LinkedList<T>::Prepend(const T& item) {
 
 template<typename T>
 void LinkedList<T>::InsertAt(const T& item, size_t index) {
-    if (index > length) throw IndexOutOfRange("LinkedList::InsertAt: index out of range");
+    if (index > length) throw IndexOutOfRange("LinkedList::InsertAt: индекс выходит за пределы");
 
     if (index == 0) {
         Prepend(item);
@@ -125,7 +125,7 @@ void LinkedList<T>::InsertAt(const T& item, size_t index) {
 template<typename T>
 LinkedList<T> LinkedList<T>::GetSubList(size_t startIndex, size_t endIndex) const {
     if (startIndex > endIndex || endIndex >= length)
-        throw IndexOutOfRange("LinkedList::GetSubList: invalid indices");
+        throw IndexOutOfRange("LinkedList::GetSubList: неверные индексы");
 
     LinkedList<T> r;
     Node* cur = getNode(startIndex);
