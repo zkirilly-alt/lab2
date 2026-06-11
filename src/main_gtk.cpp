@@ -1,32 +1,37 @@
 #include <gtkmm.h>
 #include <sstream>
+#include <cstdlib>
+#include <ctime>
+#include "Sequence.hpp"
 #include "ArraySequence.hpp"
 #include "ListSequence.hpp"
 #include "MutableArraySequence.hpp"
 #include "ImmutableArraySequence.hpp"
 #include "BitSequence.hpp"
 #include "Functional.hpp"
+#include "SquareMatrix.hpp"
+#include "Exception.hpp"
 
 class MainWindow : public Gtk::Window {
 private:
-    MutableArraySequence<int> arraySeq;
-    ListSequence<int> listSeq;
-    MutableArraySequence<int> mutableSeq;
-    ImmutableArraySequence<int> immutableSeq;
-    BitSequence bitSeq1;
-    ArraySequence<int> seq1;
-    ArraySequence<int> seq2;
-    
+    Sequence<int>* arraySeq;
+    Sequence<int>* listSeq;
+    Sequence<int>* mutableSeq;
+    Sequence<int>* immutableSeq;
+    Sequence<bool>* bitSeq1;
+    Sequence<int>* seq1;
+    Sequence<int>* seq2;
+
     Gtk::Box mainBox;
     Gtk::Notebook notebook;
-    
+
     Gtk::Box arrayPage;
     Gtk::Box listPage;
     Gtk::Box mutablePage;
     Gtk::Box immutablePage;
     Gtk::Box bitPage;
     Gtk::Box funcPage;
-    
+
     Gtk::Box arrayTopBox;
     Gtk::Box arrayBottomBox;
     Gtk::Box listTopBox;
@@ -41,7 +46,7 @@ private:
     Gtk::Box seq1Box;
     Gtk::Box seq2Box;
     Gtk::Box funcButtonsBox;
-    
+
     Gtk::Button arrayAppendButton;
     Gtk::Button arrayPrependButton;
     Gtk::Button arrayInsertButton;
@@ -49,7 +54,7 @@ private:
     Gtk::Button arrayConcatButton;
     Gtk::Button arraySubseqButton;
     Gtk::Button arrayClearButton;
-    
+
     Gtk::Button listAppendButton;
     Gtk::Button listPrependButton;
     Gtk::Button listInsertButton;
@@ -57,29 +62,32 @@ private:
     Gtk::Button listConcatButton;
     Gtk::Button listSubseqButton;
     Gtk::Button listClearButton;
-    
+
     Gtk::Button mutableAppendButton;
     Gtk::Button mutablePrependButton;
     Gtk::Button mutableInsertButton;
-    
+
     Gtk::Button immutableAppendButton;
     Gtk::Button immutablePrependButton;
     Gtk::Button immutableInsertButton;
-    
+
     Gtk::Button bitSetButton;
     Gtk::Button bitAndButton;
     Gtk::Button bitOrButton;
     Gtk::Button bitXorButton;
     Gtk::Button bitNotButton;
-    
+
     Gtk::Button mapButton;
     Gtk::Button whereButton;
     Gtk::Button reduceButton;
     Gtk::Button zipButton;
+    Gtk::Button splitButton;
     Gtk::Button seq1AddButton;
     Gtk::Button seq1ClearButton;
     Gtk::Button seq2AddButton;
     Gtk::Button seq2ClearButton;
+    Gtk::Button iteratorsButton;
+    Gtk::Button unzipButton;
 
     Gtk::Entry arrayValueEntry;
     Gtk::Entry arrayIndexEntry;
@@ -93,463 +101,626 @@ private:
     Gtk::Entry bitSizeEntry;
     Gtk::Entry seq1Entry;
     Gtk::Entry seq2Entry;
-    
+
     Gtk::ScrolledWindow arrayScroll;
     Gtk::ScrolledWindow listScroll;
     Gtk::ScrolledWindow mutableScroll;
     Gtk::ScrolledWindow immutableScroll;
     Gtk::ScrolledWindow bitScroll;
     Gtk::ScrolledWindow funcScroll;
-    
+
     Gtk::TextView arrayOutput;
     Gtk::TextView listOutput;
     Gtk::TextView mutableOutput;
     Gtk::TextView immutableOutput;
     Gtk::TextView bitOutput;
     Gtk::TextView funcOutput;
-    
+
     Glib::RefPtr<Gtk::TextBuffer> arrayBuffer;
     Glib::RefPtr<Gtk::TextBuffer> listBuffer;
     Glib::RefPtr<Gtk::TextBuffer> mutableBuffer;
     Glib::RefPtr<Gtk::TextBuffer> immutableBuffer;
     Glib::RefPtr<Gtk::TextBuffer> bitBuffer;
     Glib::RefPtr<Gtk::TextBuffer> funcBuffer;
-    
-    void appendArrayOutput(const Glib::ustring& text) {
-        auto iter = arrayBuffer->end();
-        arrayBuffer->insert(iter, text + "\n");
+
+    Gtk::Box squareMatrixPage;
+    Gtk::Box squareMatrixTopBox;
+    Gtk::Box squareMatrixBottomBox;
+    Gtk::Entry matrixSizeEntry;
+    Gtk::Button matrixCreateButton;
+    Gtk::Grid matrixInputGrid;
+    DynamicArray<DynamicArray<Gtk::Entry*>> matrixEntries;
+    SquareMatrix<double> currentMatrix;
+    Gtk::Button matrixAddButton;
+    Gtk::Button matrixScalarButton;
+    Gtk::Button matrixNormButton;
+    Gtk::Button matrixSwapRowsButton;
+    Gtk::Button matrixMultiplyRowButton;
+    Gtk::Button matrixAddRowButton;
+    Gtk::Button matrixSwapColsButton;
+    Gtk::Button matrixMultiplyColButton;
+    Gtk::Button matrixAddColButton;
+    Gtk::Button matrixMultiplyButton;
+    Gtk::ScrolledWindow squareMatrixScroll;
+    Gtk::TextView squareMatrixOutput;
+    Glib::RefPtr<Gtk::TextBuffer> squareMatrixBuffer;
+    Gtk::Entry scalarEntry;
+    Gtk::Entry rowIndexEntry;
+    Gtk::Entry factorEntry;
+    Gtk::Entry targetEntry;
+    Gtk::Entry sourceEntry;
+    Gtk::Entry matrixInitEntry;
+    Gtk::Button matrixInitButton;
+
+    template<typename T>
+    std::string toString(const T& value) { return std::to_string(value); }
+    std::string toString(const char* value) { return std::string(value); }
+    std::string toString(const std::string& value) { return value; }
+
+    void appendPart(const Glib::ustring& text) { squareMatrixBuffer->insert(squareMatrixBuffer->end(), text); }
+    template<typename First, typename... Rest> void appendParts(First first, Rest... rest) {
+        appendPart(Glib::ustring(toString(first)));
+        appendParts(rest...);
     }
-    
-    void appendListOutput(const Glib::ustring& text) {
-        auto iter = listBuffer->end();
-        listBuffer->insert(iter, text + "\n");
+    void appendParts() { appendPart(Glib::ustring("\n")); }
+
+    void appendArrayOutput(const Glib::ustring& text) { arrayBuffer->insert(arrayBuffer->end(), text + "\n"); }
+    void appendListOutput(const Glib::ustring& text) { listBuffer->insert(listBuffer->end(), text + "\n"); }
+    void appendMutableOutput(const Glib::ustring& text) { mutableBuffer->insert(mutableBuffer->end(), text + "\n"); }
+    void appendImmutableOutput(const Glib::ustring& text) { immutableBuffer->insert(immutableBuffer->end(), text + "\n"); }
+    void appendBitOutput(const Glib::ustring& text) { bitBuffer->insert(bitBuffer->end(), text + "\n"); }
+    void appendFuncOutput(const Glib::ustring& text) { funcBuffer->insert(funcBuffer->end(), text + "\n"); }
+    void appendMatrixOutputLine(const Glib::ustring& text) { squareMatrixBuffer->insert(squareMatrixBuffer->end(), text + "\n"); }
+
+    template<typename... Args> void appendArrayOutputParts(Args... args) {
+        std::stringstream ss; (ss << ... << args); appendArrayOutput(Glib::ustring(ss.str()));
     }
-    
-    void appendMutableOutput(const Glib::ustring& text) {
-        auto iter = mutableBuffer->end();
-        mutableBuffer->insert(iter, text + "\n");
+    template<typename... Args> void appendListOutputParts(Args... args) {
+        std::stringstream ss; (ss << ... << args); appendListOutput(Glib::ustring(ss.str()));
     }
-    
-    void appendImmutableOutput(const Glib::ustring& text) {
-        auto iter = immutableBuffer->end();
-        immutableBuffer->insert(iter, text + "\n");
+    template<typename... Args> void appendMutableOutputParts(Args... args) {
+        std::stringstream ss; (ss << ... << args); appendMutableOutput(Glib::ustring(ss.str()));
     }
-    
-    void appendBitOutput(const Glib::ustring& text) {
-        auto iter = bitBuffer->end();
-        bitBuffer->insert(iter, text + "\n");
+    template<typename... Args> void appendImmutableOutputParts(Args... args) {
+        std::stringstream ss; (ss << ... << args); appendImmutableOutput(Glib::ustring(ss.str()));
     }
-    
-    void appendFuncOutput(const Glib::ustring& text) {
-        auto iter = funcBuffer->end();
-        funcBuffer->insert(iter, text + "\n");
+    template<typename... Args> void appendBitOutputParts(Args... args) {
+        std::stringstream ss; (ss << ... << args); appendBitOutput(Glib::ustring(ss.str()));
     }
-    
-    Glib::ustring getSequenceString(Sequence<int>* seq) {
-        Glib::ustring result = "[";
-        for (int i = 0; i < seq->GetLength(); ++i) {
-            result += std::to_string(seq->Get(i));
-            if (i < seq->GetLength() - 1) result += ", ";
-        }
-        result += "]";
-        return result;
-    }
-    
-    Glib::ustring getBitString(BitSequence* seq) {
-        Glib::ustring result = "";
-        for (int i = 0; i < seq->GetLength(); ++i) {
-            result += seq->Get(i) ? "1" : "0";
-        }
-        return result;
-    }
-    
-    void onArrayAppend() {
-        try {
-            int value = std::stoi(arrayValueEntry.get_text());
-            arraySeq.Append(value);
-            appendArrayOutput("Добавить " + std::to_string(value) + ": " + getSequenceString(&arraySeq));
-            arrayValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendArrayOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onArrayPrepend() {
-        try {
-            int value = std::stoi(arrayValueEntry.get_text());
-            arraySeq.Prepend(value);
-            appendArrayOutput("Добавить в начало " + std::to_string(value) + ": " + getSequenceString(&arraySeq));
-            arrayValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendArrayOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onArrayInsert() {
-        try {
-            int index = std::stoi(arrayIndexEntry.get_text());
-            int value = std::stoi(arrayValueEntry.get_text());
-            arraySeq.InsertAt(value, index);
-            appendArrayOutput("Вставить " + std::to_string(value) + " в " + std::to_string(index) + ": " + getSequenceString(&arraySeq));
-            arrayIndexEntry.set_text("");
-            arrayValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendArrayOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onArrayGet() {
-        try {
-            int index = std::stoi(arrayIndexEntry.get_text());
-            int value = arraySeq.Get(index);
-            appendArrayOutput("Получить[" + std::to_string(index) + "] = " + std::to_string(value));
-            arrayIndexEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendArrayOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onArrayConcat() {
-        MutableArraySequence<int> seq2;
-        seq2.Append(100);
-        seq2.Append(200);
-        seq2.Append(300);
-        Sequence<int>* result = arraySeq.Concat(seq2);
-        appendArrayOutput("Склеить с [100,200,300]: " + getSequenceString(result));
-        delete result;
-    }
-    
-    void onArraySubseq() {
-        try {
-            int start = std::stoi(arrayIndexEntry.get_text());
-            Sequence<int>* subseq = arraySeq.GetSubsequence(start, arraySeq.GetLength() - 1);
-            appendArrayOutput("Подпоследовательность с " + std::to_string(start) + ": " + getSequenceString(subseq));
-            delete subseq;
-            arrayIndexEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendArrayOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onArrayClear() {
-        while (arraySeq.GetLength() > 0) {
-            arraySeq.RemoveAt(0);
-        }
-        appendArrayOutput("Очистить: " + getSequenceString(&arraySeq));
-    }
-    
-    void onListAppend() {
-        try {
-            int value = std::stoi(listValueEntry.get_text());
-            listSeq.Append(value);
-            appendListOutput("Добавить " + std::to_string(value) + ": " + getSequenceString(&listSeq));
-            listValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendListOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onListPrepend() {
-        try {
-            int value = std::stoi(listValueEntry.get_text());
-            listSeq.Prepend(value);
-            appendListOutput("Добавить в начало " + std::to_string(value) + ": " + getSequenceString(&listSeq));
-            listValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendListOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onListInsert() {
-        try {
-            int index = std::stoi(listIndexEntry.get_text());
-            int value = std::stoi(listValueEntry.get_text());
-            listSeq.InsertAt(value, index);
-            appendListOutput("Вставить " + std::to_string(value) + " в " + std::to_string(index) + ": " + getSequenceString(&listSeq));
-            listIndexEntry.set_text("");
-            listValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendListOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onListGet() {
-        try {
-            int index = std::stoi(listIndexEntry.get_text());
-            int value = listSeq.Get(index);
-            appendListOutput("Получить[" + std::to_string(index) + "] = " + std::to_string(value));
-            listIndexEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendListOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onListConcat() {
-        ListSequence<int> seq2;
-        seq2.Append(100);
-        seq2.Append(200);
-        seq2.Append(300);
-        Sequence<int>* result = listSeq.Concat(seq2);
-        appendListOutput("Склеить с [100,200,300]: " + getSequenceString(result));
-        delete result;
-    }
-    
-    void onListSubseq() {
-        try {
-            int start = std::stoi(listIndexEntry.get_text());
-            Sequence<int>* subseq = listSeq.GetSubsequence(start, listSeq.GetLength() - 1);
-            appendListOutput("Подпоследовательность с " + std::to_string(start) + ": " + getSequenceString(subseq));
-            delete subseq;
-            listIndexEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendListOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onListClear() {
-        while (listSeq.GetLength() > 0) {
-            listSeq.RemoveAt(0);
-        }
-        appendListOutput("Очистить: " + getSequenceString(&listSeq));
-    }
-    
-    void onMutableAppend() {
-        try {
-            int value = std::stoi(mutableValueEntry.get_text());
-            mutableSeq.Append(value);
-            appendMutableOutput("Mutable Добавить " + std::to_string(value) + ": " + getSequenceString(&mutableSeq));
-            mutableValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendMutableOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onMutablePrepend() {
-        try {
-            int value = std::stoi(mutableValueEntry.get_text());
-            mutableSeq.Prepend(value);
-            appendMutableOutput("Mutable Добавить в начало " + std::to_string(value) + ": " + getSequenceString(&mutableSeq));
-            mutableValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendMutableOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onMutableInsert() {
-        try {
-            int index = std::stoi(mutableValueEntry.get_text());
-            int value = std::stoi(mutableValueEntry.get_text());
-            mutableSeq.InsertAt(value, index);
-            appendMutableOutput("Mutable Вставить " + std::to_string(value) + " в " + std::to_string(index) + ": " + getSequenceString(&mutableSeq));
-            mutableValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendMutableOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onImmutableAppend() {
-        try {
-            int value = std::stoi(immutableValueEntry.get_text());
-            ImmutableArraySequence<int>* newSeq = immutableSeq.AppendImmutable(value);
-            appendImmutableOutput("Immutable Добавить " + std::to_string(value));
-            appendImmutableOutput("  Было: " + getSequenceString(&immutableSeq));
-            appendImmutableOutput("  Стало: " + getSequenceString(newSeq));
-            delete newSeq;
-            immutableValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendImmutableOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onImmutablePrepend() {
-        try {
-            int value = std::stoi(immutableValueEntry.get_text());
-            ImmutableArraySequence<int>* newSeq = immutableSeq.PrependImmutable(value);
-            appendImmutableOutput("Immutable Добавить в начало " + std::to_string(value));
-            appendImmutableOutput("  Было: " + getSequenceString(&immutableSeq));
-            appendImmutableOutput("  Стало: " + getSequenceString(newSeq));
-            delete newSeq;
-            immutableValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendImmutableOutput("Ошибка: введите число");
-        }
-    }
-    
-    void onImmutableInsert() {
-        try {
-            int index = std::stoi(immutableIndexEntry.get_text());
-            int value = std::stoi(immutableValueEntry.get_text());
-            ImmutableArraySequence<int>* newSeq = immutableSeq.InsertAtImmutable(value, index);
-            appendImmutableOutput("Immutable Вставить " + std::to_string(value) + " в " + std::to_string(index));
-            appendImmutableOutput("  Было: " + getSequenceString(&immutableSeq));
-            appendImmutableOutput("  Стало: " + getSequenceString(newSeq));
-            delete newSeq;
-            immutableIndexEntry.set_text("");
-            immutableValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendImmutableOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onBitSet() {
-        try {
-            int index = std::stoi(bitIndexEntry.get_text());
-            int value = std::stoi(bitValueEntry.get_text());
-            if (bitSeq1.GetLength() <= index) {
-                BitSequence newSeq(index + 1);
-                for (int i = 0; i < bitSeq1.GetLength(); ++i) {
-                    newSeq.Set(i, bitSeq1.Get(i));
-                }
-                bitSeq1 = newSeq;
-            }
-            bitSeq1.Set(index, value == 1);
-            appendBitOutput("BitSequence1: " + getBitString(&bitSeq1));
-            bitIndexEntry.set_text("");
-            bitValueEntry.set_text("");
-        } catch (const std::exception& e) {
-            appendBitOutput("Ошибка: введите корректные данные");
-        }
-    }
-    
-    void onBitAnd() {
-        try {
-            int size = std::stoi(bitSizeEntry.get_text());
-            BitSequence seq2(size);
-            for (int i = 0; i < size && i < bitSeq1.GetLength(); ++i) {
-                seq2.Set(i, bitSeq1.Get(i));
-            }
-            BitSequence result = bitSeq1 & seq2;
-            appendBitOutput("BitSequence1 И BitSequence2: " + getBitString(&result));
-        } catch (const std::exception& e) {
-            appendBitOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onBitOr() {
-        try {
-            int size = std::stoi(bitSizeEntry.get_text());
-            BitSequence seq2(size);
-            for (int i = 0; i < size && i < bitSeq1.GetLength(); ++i) {
-                seq2.Set(i, bitSeq1.Get(i));
-            }
-            BitSequence result = bitSeq1 | seq2;
-            appendBitOutput("BitSequence1 ИЛИ BitSequence2: " + getBitString(&result));
-        } catch (const std::exception& e) {
-            appendBitOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onBitXor() {
-        try {
-            int size = std::stoi(bitSizeEntry.get_text());
-            BitSequence seq2(size);
-            for (int i = 0; i < size && i < bitSeq1.GetLength(); ++i) {
-                seq2.Set(i, bitSeq1.Get(i));
-            }
-            BitSequence result = bitSeq1 ^ seq2;
-            appendBitOutput("BitSequence1 ИСКЛЮЧАЮЩЕЕ ИЛИ BitSequence2: " + getBitString(&result));
-        } catch (const std::exception& e) {
-            appendBitOutput("Ошибка: " + Glib::ustring(e.what()));
-        }
-    }
-    
-    void onBitNot() {
-        BitSequence result = ~bitSeq1;
-        appendBitOutput("НЕ BitSequence1: " + getBitString(&result));
-    }
-    
-    void onMap() {
-        if (seq1.GetLength() == 0) {
-            appendFuncOutput("Ошибка: первая последовательность пуста");
-            return;
-        }
-        Sequence<int>* result = Functional<int, int>::Map(&seq1, [](int x) { return x * x; });
-        appendFuncOutput("Map " + getSequenceString(&seq1) + " -> квадраты: " + getSequenceString(result));
-        delete result;
-    }
-    
-    void onWhere() {
-        if (seq1.GetLength() == 0) {
-            appendFuncOutput("Ошибка: первая последовательность пуста");
-            return;
-        }
-        Sequence<int>* result = Functional<int, int>::Where(&seq1, [](int x) { return x % 2 == 0; });
-        appendFuncOutput("Where " + getSequenceString(&seq1) + " -> четные: " + getSequenceString(result));
-        delete result;
-    }
-    
-    void onReduce() {
-        if (seq1.GetLength() == 0) {
-            appendFuncOutput("Ошибка: первая последовательность пуста");
-            return;
-        }
-        int sum = Functional<int, int>::Reduce(&seq1, [](int acc, int x) { return acc + x; }, 0);
-        int product = Functional<int, int>::Reduce(&seq1, [](int acc, int x) { return acc * x; }, 1);
-        appendFuncOutput("Reduce " + getSequenceString(&seq1) + " -> сумма = " + std::to_string(sum) + ", произведение = " + std::to_string(product));
-    }
-    
-    void onZip() {
-        if (seq1.GetLength() == 0) {
-            appendFuncOutput("Ошибка: первая последовательность пуста");
-            return;
-        }
-        if (seq2.GetLength() == 0) {
-            appendFuncOutput("Ошибка: вторая последовательность пуста");
-            return;
-        }
-        Sequence<std::pair<int, int>>* result = Functional<int, int>::Zip(&seq1, &seq2);
-        Glib::ustring zipStr = "[";
-        for (int i = 0; i < result->GetLength(); ++i) {
-            zipStr += "(" + std::to_string(result->Get(i).first) + "," + std::to_string(result->Get(i).second) + ")";
-            if (i < result->GetLength() - 1) zipStr += ", ";
-        }
-        zipStr += "]";
-        appendFuncOutput("Zip " + getSequenceString(&seq1) + " и " + getSequenceString(&seq2) + " -> " + zipStr);
-        delete result;
-    }
-    
-    void onSeq1Add() {
-        std::string input = seq1Entry.get_text();
-        std::stringstream ss(input);
-        int num;
-        while (ss >> num) {
-            seq1.Append(num);
-        }
-        appendFuncOutput("Seq1 добавлены: " + getSequenceString(&seq1));
-        seq1Entry.set_text("");
-    }
-    
-    void onSeq1Clear() {
-        while (seq1.GetLength() > 0) {
-            seq1.RemoveAt(0);
-        }
-        appendFuncOutput("Seq1 очищена");
-    }
-    
-    void onSeq2Add() {
-        std::string input = seq2Entry.get_text();
-        std::stringstream ss(input);
-        int num;
-        while (ss >> num) {
-            seq2.Append(num);
-        }
-        appendFuncOutput("Seq2 добавлены: " + getSequenceString(&seq2));
-        seq2Entry.set_text("");
-    }
-    
-    void onSeq2Clear() {
-        while (seq2.GetLength() > 0) {
-            seq2.RemoveAt(0);
-        }
-        appendFuncOutput("Seq2 очищена");
-    }
-    
-    Gtk::Label* makeLabel(const Glib::ustring& text) {
-        return Gtk::make_managed<Gtk::Label>(text);
+    template<typename... Args> void appendFuncOutputParts(Args... args) {
+        std::stringstream ss; (ss << ... << args); appendFuncOutput(Glib::ustring(ss.str()));
     }
 
+    Glib::ustring getSequenceString(Sequence<int>* seq) {
+        std::stringstream ss; ss << "[";
+        for (int i = 0; i < seq->GetLength(); ++i) {
+            ss << seq->Get(i); if (i < seq->GetLength() - 1) ss << ", ";
+        }
+        ss << "]"; return Glib::ustring(ss.str());
+    }
+    Glib::ustring getBitString(Sequence<bool>* seq) {
+        std::stringstream ss;
+        for (int i = 0; i < seq->GetLength(); ++i) ss << (seq->Get(i) ? "1" : "0");
+        return Glib::ustring(ss.str());
+    }
+
+    int safe_stoi(const Glib::ustring& str, const std::string& fieldName = "") {
+        if (str.empty()) {
+            std::stringstream ss;
+            ss << "Поле " << fieldName << " пустое";
+            throw InvalidArgumentError(ss.str());
+        }
+        try { return std::stoi(str); }
+        catch (const std::invalid_argument&) {
+            std::stringstream ss;
+            ss << "Поле " << fieldName << " содержит не число: " << str;
+            throw InvalidArgumentError(ss.str());
+        }
+        catch (const std::out_of_range&) {
+            std::stringstream ss;
+            ss << "Число в поле " << fieldName << " вне допустимого диапазона";
+            throw InvalidArgumentError(ss.str());
+        }
+    }
+
+    double safe_stod(const Glib::ustring& str, const std::string& fieldName = "") {
+        if (str.empty()) {
+            std::stringstream ss;
+            ss << "Поле " << fieldName << " пустое";
+            throw InvalidArgumentError(ss.str());
+        }
+        try { return std::stod(str); }
+        catch (const std::invalid_argument&) {
+            std::stringstream ss;
+            ss << "Поле " << fieldName << " содержит не число: " << str;
+            throw InvalidArgumentError(ss.str());
+        }
+        catch (const std::out_of_range&) {
+            std::stringstream ss;
+            ss << "Число в поле " << fieldName << " вне допустимого диапазона";
+            throw InvalidArgumentError(ss.str());
+        }
+    }
+
+    void onArrayAppend() {
+        try {
+            int value = safe_stoi(arrayValueEntry.get_text(), "значение");
+            arraySeq->Append(value);
+            appendArrayOutputParts("Добавить ", value, ": ", getSequenceString(arraySeq));
+            arrayValueEntry.set_text("");
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+    void onArrayPrepend() {
+        try {
+            int value = safe_stoi(arrayValueEntry.get_text(), "значение");
+            arraySeq->Prepend(value);
+            appendArrayOutputParts("Добавить в начало ", value, ": ", getSequenceString(arraySeq));
+            arrayValueEntry.set_text("");
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+    void onArrayInsert() {
+        try {
+            int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс");
+            int val = safe_stoi(arrayValueEntry.get_text(), "значение");
+            arraySeq->InsertAt(val, idx);
+            appendArrayOutputParts("Вставить ", val, " в ", idx, ": ", getSequenceString(arraySeq));
+            arrayIndexEntry.set_text(""); arrayValueEntry.set_text("");
+        } catch (const IndexOutOfRange& e) {
+            if (e.HasDetails()) appendArrayOutputParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
+            else appendArrayOutput(e.what());
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+    void onArrayGet() {
+        try {
+            int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс");
+            int val = arraySeq->Get(idx);
+            appendArrayOutputParts("Получить[", idx, "] = ", val);
+            arrayIndexEntry.set_text("");
+        } catch (const IndexOutOfRange& e) {
+            if (e.HasDetails()) appendArrayOutputParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
+            else appendArrayOutput(e.what());
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+    void onArrayConcat() {
+        try {
+            MutableArraySequence<int> tmp; tmp.Append(100); tmp.Append(200); tmp.Append(300);
+            Sequence<int>* res = arraySeq->Concat(tmp);
+            appendArrayOutputParts("Склеить с [100,200,300]: ", getSequenceString(res));
+            delete res;
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+    void onArraySubseq() {
+        try {
+            int start = safe_stoi(arrayIndexEntry.get_text(), "начальный индекс");
+            Sequence<int>* sub = arraySeq->GetSubsequence(start, arraySeq->GetLength()-1);
+            appendArrayOutputParts("Подпоследовательность с ", start, ": ", getSequenceString(sub));
+            delete sub; arrayIndexEntry.set_text("");
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+    void onArrayClear() { try { arraySeq->Clear(); appendArrayOutputParts("Очистить: ", getSequenceString(arraySeq)); } catch (const std::exception& e) { appendArrayOutput(e.what()); } }
+
+    void onListAppend() {
+        try {
+            int v = safe_stoi(listValueEntry.get_text(), "значение");
+            listSeq->Append(v);
+            appendListOutputParts("Добавить ", v, ": ", getSequenceString(listSeq));
+            listValueEntry.set_text("");
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+    void onListPrepend() {
+        try {
+            int v = safe_stoi(listValueEntry.get_text(), "значение");
+            listSeq->Prepend(v);
+            appendListOutputParts("Добавить в начало ", v, ": ", getSequenceString(listSeq));
+            listValueEntry.set_text("");
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+    void onListInsert() {
+        try {
+            int idx = safe_stoi(listIndexEntry.get_text(), "индекс");
+            int val = safe_stoi(listValueEntry.get_text(), "значение");
+            listSeq->InsertAt(val, idx);
+            appendListOutputParts("Вставить ", val, " в ", idx, ": ", getSequenceString(listSeq));
+            listIndexEntry.set_text(""); listValueEntry.set_text("");
+        } catch (const IndexOutOfRange& e) {
+            if (e.HasDetails()) appendListOutputParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
+            else appendListOutput(e.what());
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+    void onListGet() {
+        try {
+            int idx = safe_stoi(listIndexEntry.get_text(), "индекс");
+            int val = listSeq->Get(idx);
+            appendListOutputParts("Получить[", idx, "] = ", val);
+            listIndexEntry.set_text("");
+        } catch (const IndexOutOfRange& e) {
+            if (e.HasDetails()) appendListOutputParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
+            else appendListOutput(e.what());
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+    void onListConcat() {
+        try {
+            ListSequence<int> tmp; tmp.Append(100); tmp.Append(200); tmp.Append(300);
+            Sequence<int>* res = listSeq->Concat(tmp);
+            appendListOutputParts("Склеить с [100,200,300]: ", getSequenceString(res));
+            delete res;
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+    void onListSubseq() {
+        try {
+            int start = safe_stoi(listIndexEntry.get_text(), "начальный индекс");
+            Sequence<int>* sub = listSeq->GetSubsequence(start, listSeq->GetLength()-1);
+            appendListOutputParts("Подпоследовательность с ", start, ": ", getSequenceString(sub));
+            delete sub; listIndexEntry.set_text("");
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+    void onListClear() { try { listSeq->Clear(); appendListOutputParts("Очистить: ", getSequenceString(listSeq)); } catch (const std::exception& e) { appendListOutput(e.what()); } }
+
+    void onMutableAppend() {
+        try {
+            int v = safe_stoi(mutableValueEntry.get_text(), "значение");
+            mutableSeq->Append(v);
+            appendMutableOutputParts("Mutable Добавить ", v, ": ", getSequenceString(mutableSeq));
+            mutableValueEntry.set_text("");
+        } catch (const std::exception& e) { appendMutableOutput(e.what()); }
+    }
+    void onMutablePrepend() {
+        try {
+            int v = safe_stoi(mutableValueEntry.get_text(), "значение");
+            mutableSeq->Prepend(v);
+            appendMutableOutputParts("Mutable Добавить в начало ", v, ": ", getSequenceString(mutableSeq));
+            mutableValueEntry.set_text("");
+        } catch (const std::exception& e) { appendMutableOutput(e.what()); }
+    }
+    void onMutableInsert() {
+        try {
+            int idx = safe_stoi(mutableValueEntry.get_text(), "индекс");
+            int val = safe_stoi(mutableValueEntry.get_text(), "значение");
+            mutableSeq->InsertAt(val, idx);
+            appendMutableOutputParts("Mutable Вставить ", val, " в ", idx, ": ", getSequenceString(mutableSeq));
+            mutableValueEntry.set_text("");
+        } catch (const std::exception& e) { appendMutableOutput(e.what()); }
+    }
+
+    void onImmutableAppend() {
+        try {
+            int v = safe_stoi(immutableValueEntry.get_text(), "значение");
+            ImmutableArraySequence<int>* newSeq = static_cast<ImmutableArraySequence<int>*>(immutableSeq)->AppendImmutable(v);
+            appendImmutableOutputParts("Immutable Добавить ", v);
+            appendImmutableOutputParts("  Было: ", getSequenceString(immutableSeq));
+            appendImmutableOutputParts("  Стало: ", getSequenceString(newSeq));
+            delete immutableSeq; immutableSeq = newSeq;
+            immutableValueEntry.set_text("");
+        } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
+    }
+    void onImmutablePrepend() {
+        try {
+            int v = safe_stoi(immutableValueEntry.get_text(), "значение");
+            ImmutableArraySequence<int>* newSeq = static_cast<ImmutableArraySequence<int>*>(immutableSeq)->PrependImmutable(v);
+            appendImmutableOutputParts("Immutable Добавить в начало ", v);
+            appendImmutableOutputParts("  Было: ", getSequenceString(immutableSeq));
+            appendImmutableOutputParts("  Стало: ", getSequenceString(newSeq));
+            delete immutableSeq; immutableSeq = newSeq;
+            immutableValueEntry.set_text("");
+        } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
+    }
+    void onImmutableInsert() {
+        try {
+            int idx = safe_stoi(immutableIndexEntry.get_text(), "индекс");
+            int val = safe_stoi(immutableValueEntry.get_text(), "значение");
+            ImmutableArraySequence<int>* newSeq = static_cast<ImmutableArraySequence<int>*>(immutableSeq)->InsertAtImmutable(val, idx);
+            appendImmutableOutputParts("Immutable Вставить ", val, " в ", idx);
+            appendImmutableOutputParts("  Было: ", getSequenceString(immutableSeq));
+            appendImmutableOutputParts("  Стало: ", getSequenceString(newSeq));
+            delete immutableSeq; immutableSeq = newSeq;
+            immutableIndexEntry.set_text(""); immutableValueEntry.set_text("");
+        } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
+    }
+
+    void onBitSet() {
+        try {
+            int idx = safe_stoi(bitIndexEntry.get_text(), "индекс");
+            int val = safe_stoi(bitValueEntry.get_text(), "бит");
+            if (bitSeq1->GetLength() <= idx) {
+                BitSequence* ns = new BitSequence(idx+1);
+                for (int i=0; i<bitSeq1->GetLength(); ++i) ns->Set(i, bitSeq1->Get(i));
+                delete bitSeq1; bitSeq1 = ns;
+            }
+            static_cast<BitSequence*>(bitSeq1)->Set(idx, val==1);
+            appendBitOutputParts("BitSequence1: ", getBitString(bitSeq1));
+            bitIndexEntry.set_text(""); bitValueEntry.set_text("");
+        } catch (const std::exception& e) { appendBitOutput(e.what()); }
+    }
+    void onBitAnd() {
+        try {
+            int sz = safe_stoi(bitSizeEntry.get_text(), "размер");
+            BitSequence seq2(sz);
+            for (int i=0; i<sz && i<bitSeq1->GetLength(); ++i) seq2.Set(i, bitSeq1->Get(i));
+            BitSequence res = (*static_cast<BitSequence*>(bitSeq1)) & seq2;
+            appendBitOutputParts("BitSequence1 И BitSequence2: ", getBitString(&res));
+        } catch (const std::exception& e) { appendBitOutput(e.what()); }
+    }
+    void onBitOr() {
+        try {
+            int sz = safe_stoi(bitSizeEntry.get_text(), "размер");
+            BitSequence seq2(sz);
+            for (int i=0; i<sz && i<bitSeq1->GetLength(); ++i) seq2.Set(i, bitSeq1->Get(i));
+            BitSequence res = (*static_cast<BitSequence*>(bitSeq1)) | seq2;
+            appendBitOutputParts("BitSequence1 ИЛИ BitSequence2: ", getBitString(&res));
+        } catch (const std::exception& e) { appendBitOutput(e.what()); }
+    }
+    void onBitXor() {
+        try {
+            int sz = safe_stoi(bitSizeEntry.get_text(), "размер");
+            BitSequence seq2(sz);
+            for (int i=0; i<sz && i<bitSeq1->GetLength(); ++i) seq2.Set(i, bitSeq1->Get(i));
+            BitSequence res = (*static_cast<BitSequence*>(bitSeq1)) ^ seq2;
+            appendBitOutputParts("BitSequence1 ИСКЛЮЧАЮЩЕЕ ИЛИ BitSequence2: ", getBitString(&res));
+        } catch (const std::exception& e) { appendBitOutput(e.what()); }
+    }
+    void onBitNot() {
+        try {
+            BitSequence res = ~(*static_cast<BitSequence*>(bitSeq1));
+            appendBitOutputParts("НЕ BitSequence1: ", getBitString(&res));
+        } catch (const std::exception& e) { appendBitOutput(e.what()); }
+    }
+
+    void onMap() {
+        try {
+            if (seq1->GetLength()==0) { appendFuncOutput("Ошибка: первая последовательность пуста"); return; }
+            Sequence<int>* res = Functional<int,int>::Map(seq1, [](int x){return x*x;});
+            appendFuncOutputParts("Map ", getSequenceString(seq1), " -> квадраты: ", getSequenceString(res));
+            delete res;
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onWhere() {
+        try {
+            if (seq1->GetLength()==0) { appendFuncOutput("Ошибка: первая последовательность пуста"); return; }
+            Sequence<int>* res = Functional<int,int>::Where(seq1, [](int x){return x%2==0;});
+            appendFuncOutputParts("Where ", getSequenceString(seq1), " -> четные: ", getSequenceString(res));
+            delete res;
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onReduce() {
+        try {
+            if (seq1->GetLength()==0) { appendFuncOutput("Ошибка: первая последовательность пуста"); return; }
+            int sum = Functional<int,int>::Reduce(seq1, [](int a,int b){return a+b;},0);
+            int prod = Functional<int,int>::Reduce(seq1, [](int a,int b){return a*b;},1);
+            appendFuncOutputParts("Reduce ", getSequenceString(seq1), " -> сумма = ", sum, ", произведение = ", prod);
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onZip() {
+        try {
+            if (seq1->GetLength()==0 || seq2->GetLength()==0) { appendFuncOutput("Ошибка: пустые последовательности"); return; }
+            Sequence<std::pair<int,int>>* z = Functional<int,int>::Zip(seq1, seq2);
+            std::stringstream ss; ss << "[";
+            for (int i=0; i<z->GetLength(); ++i) ss << "(" << z->Get(i).first << "," << z->Get(i).second << ")";
+            ss << "]";
+            appendFuncOutputParts("Zip ", getSequenceString(seq1), " и ", getSequenceString(seq2), " -> ", ss.str());
+            delete z;
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onSplit() {
+        try {
+            if (seq1->GetLength()==0) { appendFuncOutput("Ошибка: Seq1 пуста"); return; }
+            Sequence<Sequence<int>*>* res = Functional<int,int>::Split(seq1, [](int x){return x==0;});
+            std::stringstream ss; ss << "Split по нулю: ";
+            for (int i=0; i<res->GetLength(); ++i) ss << getSequenceString(res->Get(i)) << ", ";
+            appendFuncOutput(ss.str());
+            for (int i=0; i<res->GetLength(); ++i) delete res->Get(i);
+            delete res;
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onSeq1Add() {
+        try {
+            std::string inp = seq1Entry.get_text();
+            std::stringstream ss(inp); int num; DynamicArray<int> vals; bool tooBig=false;
+            while (ss>>num) { if (num>40000||num<-40000) { tooBig=true; break; } vals.Append(num); }
+            if (tooBig) { appendFuncOutput("Ошибка: числа >40000 или <-40000 не допускаются"); seq1Entry.set_text(""); return; }
+            for (size_t i=0; i<vals.GetSize(); ++i) seq1->Append(vals.Get(i));
+            appendFuncOutputParts("Seq1 добавлены: ", getSequenceString(seq1));
+            seq1Entry.set_text("");
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onSeq1Clear() { try { seq1->Clear(); appendFuncOutputParts("Seq1 очищена"); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
+    void onSeq2Add() {
+        try {
+            std::string inp = seq2Entry.get_text();
+            std::stringstream ss(inp); int num; DynamicArray<int> vals; bool tooBig=false;
+            while (ss>>num) { if (num>40000||num<-40000) { tooBig=true; break; } vals.Append(num); }
+            if (tooBig) { appendFuncOutput("Ошибка: числа >40000 или <-40000 не допускаются"); seq2Entry.set_text(""); return; }
+            for (size_t i=0; i<vals.GetSize(); ++i) seq2->Append(vals.Get(i));
+            appendFuncOutputParts("Seq2 добавлены: ", getSequenceString(seq2));
+            seq2Entry.set_text("");
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onSeq2Clear() { try { seq2->Clear(); appendFuncOutputParts("Seq2 очищена"); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
+
+    void onDemoIterators() {
+        try {
+            if (seq1->GetLength()==0) { appendFuncOutput("Ошибка: Seq1 пуста"); return; }
+            std::stringstream ss; ss << "Итератор по Seq1: [";
+            for (int x : *static_cast<ArraySequence<int>*>(seq1)) ss << x << " ";
+            ss << "]"; appendFuncOutput(ss.str());
+            for (auto& x : *static_cast<ArraySequence<int>*>(seq1)) x *= 2;
+            ss.str(""); ss << "После умножения на 2: [";
+            for (int x : *static_cast<ArraySequence<int>*>(seq1)) ss << x << " ";
+            ss << "]"; appendFuncOutput(ss.str());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onUnzip() {
+        try {
+            if (seq1->GetLength()==0||seq2->GetLength()==0) { appendFuncOutput("Ошибка: пустые"); return; }
+            Sequence<std::pair<int,int>>* z = Functional<int,int>::Zip(seq1, seq2);
+            auto u = Functional<int,int>::Unzip(z);
+            appendFuncOutputParts("Unzip: ", getSequenceString(u.first), " и ", getSequenceString(u.second));
+            delete z; delete u.first; delete u.second;
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void rebuildMatrixInputGrid() {
+        for (size_t i=0; i<matrixEntries.GetSize(); ++i)
+            for (size_t j=0; j<matrixEntries.Get(i).GetSize(); ++j) delete matrixEntries.Get(i).Get(j);
+        matrixEntries.Clear();
+        std::vector<Gtk::Widget*> ch = matrixInputGrid.get_children();
+        for (auto c : ch) matrixInputGrid.remove(*c);
+        int n = currentMatrix.GetSize();
+        for (int i=0; i<n; ++i) {
+            DynamicArray<Gtk::Entry*> row;
+            for (int j=0; j<n; ++j) {
+                Gtk::Entry* e = new Gtk::Entry();
+                e->set_text(std::to_string(currentMatrix.Get(i,j)));
+                e->set_hexpand(true);
+                row.Append(e);
+                matrixInputGrid.attach(*e, j, i, 1,1);
+            }
+            matrixEntries.Append(row);
+        }
+        matrixInputGrid.show_all();
+    }
+    void printMatrix(const SquareMatrix<double>& m) {
+        int n = m.GetSize();
+        for (int i=0; i<n; ++i) {
+            std::stringstream ss; ss << "[";
+            for (int j=0; j<n; ++j) { ss << m.Get(i,j); if (j<n-1) ss << ", "; }
+            ss << "]";
+            appendMatrixOutputLine(Glib::ustring(ss.str()));
+        }
+    }
+
+    void onMatrixCreate() {
+        try {
+            int n = safe_stoi(matrixSizeEntry.get_text(), "размер матрицы");
+            if (n <= 0) throw InvalidArgumentError("Размер матрицы должен быть положительным");
+            currentMatrix = SquareMatrix<double>(n);
+            rebuildMatrixInputGrid();
+            appendParts("Создана матрица ", n, "x", n);
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixInit() {
+        try {
+            int n = currentMatrix.GetSize();
+            if (n==0) { appendMatrixOutputLine("Сначала создайте матрицу"); return; }
+            std::string inp = matrixInitEntry.get_text();
+            std::stringstream ss(inp); DynamicArray<double> vals; double v;
+            while (ss>>v) vals.Append(v);
+            if (vals.GetSize() != (size_t)(n*n)) { appendParts("Ошибка: нужно ", n*n, " чисел"); return; }
+            for (int i=0; i<n; ++i)
+                for (int j=0; j<n; ++j)
+                    currentMatrix.Set(i,j, vals.Get(i*n+j));
+            rebuildMatrixInputGrid();
+            appendMatrixOutputLine("Значения матрицы обновлены");
+            printMatrix(currentMatrix);
+            matrixInitEntry.set_text("");
+        } catch (const IndexOutOfRange& e) {
+            if (e.HasDetails()) appendParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
+            else appendMatrixOutputLine(e.what());
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixAdd() {
+        try {
+            int n = currentMatrix.GetSize();
+            SquareMatrix<double> other(n);
+            for (int i=0; i<n; ++i) for (int j=0; j<n; ++j) {
+                std::stringstream ss; ss << "ячейка[" << i << "][" << j << "]";
+                double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(), ss.str()); 
+                other.Set(i,j, val);
+            }
+            SquareMatrix<double> res = currentMatrix.Add(other);
+            appendMatrixOutputLine("Результат сложения:"); printMatrix(res);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixScalar() {
+        try {
+            double s = safe_stod(scalarEntry.get_text(), "скаляр");
+            SquareMatrix<double> res = currentMatrix.MultiplyByScalar(s);
+            appendParts("Результат умножения на ", s, ":"); printMatrix(res);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixNorm() {
+        try { appendParts("Норма матрицы: ", currentMatrix.Norm()); }
+        catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixSwapRows() {
+        try {
+            int i = safe_stoi(rowIndexEntry.get_text(), "первая строка");
+            int j = safe_stoi(targetEntry.get_text(), "вторая строка");
+            currentMatrix.SwapRows(i,j);
+            rebuildMatrixInputGrid();
+            appendParts("Строки ", i, " и ", j, " поменяны местами");
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixMultiplyRow() {
+        try {
+            int i = safe_stoi(rowIndexEntry.get_text(), "индекс строки");
+            double f = safe_stod(factorEntry.get_text(), "множитель");
+            currentMatrix.MultiplyRow(i,f);
+            rebuildMatrixInputGrid();
+            appendParts("Строка ", i, " умножена на ", f);
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixAddRow() {
+        try {
+            int t = safe_stoi(targetEntry.get_text(), "строка-получатель");
+            int s = safe_stoi(sourceEntry.get_text(), "строка-источник");
+            double f = safe_stod(factorEntry.get_text(), "множитель");
+            currentMatrix.AddRow(t,s,f);
+            rebuildMatrixInputGrid();
+            appendParts("К строке ", t, " прибавлена строка ", s, " * ", f);
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixSwapCols() {
+        try {
+            int i = safe_stoi(rowIndexEntry.get_text(), "первый столбец");
+            int j = safe_stoi(targetEntry.get_text(), "второй столбец");
+            currentMatrix.SwapCols(i,j);
+            rebuildMatrixInputGrid();
+            appendParts("Столбцы ", i, " и ", j, " поменяны местами");
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixMultiplyCol() {
+        try {
+            int j = safe_stoi(rowIndexEntry.get_text(), "индекс столбца");
+            double f = safe_stod(factorEntry.get_text(), "множитель");
+            currentMatrix.MultiplyCol(j,f);
+            rebuildMatrixInputGrid();
+            appendParts("Столбец ", j, " умножен на ", f);
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixAddCol() {
+        try {
+            int t = safe_stoi(targetEntry.get_text(), "столбец-получатель");
+            int s = safe_stoi(sourceEntry.get_text(), "столбец-источник");
+            double f = safe_stod(factorEntry.get_text(), "множитель");
+            currentMatrix.AddCol(t,s,f);
+            rebuildMatrixInputGrid();
+            appendParts("К столбцу ", t, " прибавлен столбец ", s, " * ", f);
+            printMatrix(currentMatrix);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+    void onMatrixMultiply() {
+        try {
+            int n = currentMatrix.GetSize();
+            SquareMatrix<double> other(n);
+            for (int i=0; i<n; ++i) for (int j=0; j<n; ++j) {
+                double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(), "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
+                other.Set(i,j, val);
+            }
+            SquareMatrix<double> res = currentMatrix.Multiply(other);
+            appendMatrixOutputLine("Результат умножения матриц:"); printMatrix(res);
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+
+    Gtk::Label* makeLabel(const Glib::ustring& t) { return Gtk::make_managed<Gtk::Label>(t); }
+
 public:
-    MainWindow() : 
+    MainWindow() :
         mainBox(Gtk::ORIENTATION_VERTICAL, 5),
         arrayPage(),
         listPage(),
@@ -600,10 +771,20 @@ public:
         whereButton("Where"),
         reduceButton("Reduce"),
         zipButton("Zip"),
+        splitButton("Split по нулю"),
         seq1AddButton("Добавить в Seq1"),
         seq1ClearButton("Очистить Seq1"),
         seq2AddButton("Добавить в Seq2"),
         seq2ClearButton("Очистить Seq2"),
+        iteratorsButton("Тест итераторов"),
+        unzipButton("Unzip"),
+        arraySeq(new MutableArraySequence<int>()),
+        listSeq(new ListSequence<int>()),
+        mutableSeq(new MutableArraySequence<int>()),
+        immutableSeq(new ImmutableArraySequence<int>(new int[5]{10,20,30,40,50}, 5)),
+        bitSeq1(new BitSequence()),
+        seq1(new ArraySequence<int>()),
+        seq2(new ArraySequence<int>()),
         arrayValueEntry(),
         arrayIndexEntry(),
         listValueEntry(),
@@ -615,221 +796,304 @@ public:
         bitValueEntry(),
         bitSizeEntry(),
         seq1Entry(),
-        seq2Entry() {
-        
-        set_title("Лабораторная работа 2");
-        set_default_size(1000, 700);
-        
+        seq2Entry(),
+        squareMatrixTopBox(Gtk::ORIENTATION_VERTICAL, 10),
+        squareMatrixBottomBox(Gtk::ORIENTATION_VERTICAL, 10),
+        matrixCreateButton("Создать матрицу"),
+        matrixInitButton("Установить значения"),
+        matrixAddButton("Сложение"),
+        matrixScalarButton("Умножить на скаляр"),
+        matrixNormButton("Норма"),
+        matrixSwapRowsButton("Поменять строки"),
+        matrixMultiplyRowButton("Умножить строку"),
+        matrixAddRowButton("Прибавить строку"),
+        matrixSwapColsButton("Поменять столбцы"),
+        matrixMultiplyColButton("Умножить столбец"),
+        matrixAddColButton("Прибавить столбец"),
+        matrixMultiplyButton("Умножить матрицы"),
+        matrixSizeEntry(),
+        matrixInitEntry(),
+        scalarEntry(),
+        rowIndexEntry(),
+        factorEntry(),
+        targetEntry(),
+        sourceEntry(),
+        squareMatrixBuffer(Gtk::TextBuffer::create()),
+        squareMatrixOutput(),
+        squareMatrixScroll(),
+        matrixInputGrid(),
+        matrixEntries() {
+
+        set_title("Лабораторная работа 2 и 3");
+        set_default_size(1200,800);
+        srand(time(nullptr));
         add(mainBox);
-        
-        notebook.set_hexpand(true);
-        notebook.set_vexpand(true);
+        notebook.set_hexpand(true); notebook.set_vexpand(true);
         mainBox.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET, 5);
+
         
         arrayBuffer = Gtk::TextBuffer::create();
-        arrayOutput.set_buffer(arrayBuffer);
-        arrayOutput.set_editable(false);
+        arrayOutput.set_buffer(arrayBuffer); arrayOutput.set_editable(false);
         arrayScroll.add(arrayOutput);
         arrayScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        arrayScroll.set_hexpand(true);
-        arrayScroll.set_vexpand(true);
-        
-        arrayTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
-        arrayTopBox.pack_start(arrayValueEntry, Gtk::PACK_SHRINK, 5);
-        arrayTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
-        arrayTopBox.pack_start(arrayIndexEntry, Gtk::PACK_SHRINK, 5);
-        
-        arrayBottomBox.pack_start(arrayAppendButton, Gtk::PACK_SHRINK, 5);
-        arrayBottomBox.pack_start(arrayPrependButton, Gtk::PACK_SHRINK, 5);
-        arrayBottomBox.pack_start(arrayInsertButton, Gtk::PACK_SHRINK, 5);
-        arrayBottomBox.pack_start(arrayGetButton, Gtk::PACK_SHRINK, 5);
-        arrayBottomBox.pack_start(arrayConcatButton, Gtk::PACK_SHRINK, 5);
-        arrayBottomBox.pack_start(arraySubseqButton, Gtk::PACK_SHRINK, 5);
-        arrayBottomBox.pack_start(arrayClearButton, Gtk::PACK_SHRINK, 5);
-        
-        arrayPage.pack_start(arrayTopBox, Gtk::PACK_SHRINK, 5);
-        arrayPage.pack_start(arrayScroll, Gtk::PACK_EXPAND_WIDGET, 5);
-        arrayPage.pack_start(arrayBottomBox, Gtk::PACK_SHRINK, 5);
-        
+        arrayScroll.set_hexpand(true); arrayScroll.set_vexpand(true);
+
+        arrayTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK,5);
+        arrayTopBox.pack_start(arrayValueEntry, Gtk::PACK_SHRINK,5);
+        arrayTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK,5);
+        arrayTopBox.pack_start(arrayIndexEntry, Gtk::PACK_SHRINK,5);
+
+        arrayBottomBox.pack_start(arrayAppendButton, Gtk::PACK_SHRINK,5);
+        arrayBottomBox.pack_start(arrayPrependButton, Gtk::PACK_SHRINK,5);
+        arrayBottomBox.pack_start(arrayInsertButton, Gtk::PACK_SHRINK,5);
+        arrayBottomBox.pack_start(arrayGetButton, Gtk::PACK_SHRINK,5);
+        arrayBottomBox.pack_start(arrayConcatButton, Gtk::PACK_SHRINK,5);
+        arrayBottomBox.pack_start(arraySubseqButton, Gtk::PACK_SHRINK,5);
+        arrayBottomBox.pack_start(arrayClearButton, Gtk::PACK_SHRINK,5);
+
+        arrayPage.pack_start(arrayTopBox, Gtk::PACK_SHRINK,5);
+        arrayPage.pack_start(arrayScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        arrayPage.pack_start(arrayBottomBox, Gtk::PACK_SHRINK,5);
         notebook.append_page(arrayPage, "ArraySequence");
+
         
         listBuffer = Gtk::TextBuffer::create();
-        listOutput.set_buffer(listBuffer);
-        listOutput.set_editable(false);
+        listOutput.set_buffer(listBuffer); listOutput.set_editable(false);
         listScroll.add(listOutput);
         listScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        listScroll.set_hexpand(true);
-        listScroll.set_vexpand(true);
-        
-        listTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
-        listTopBox.pack_start(listValueEntry, Gtk::PACK_SHRINK, 5);
-        listTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
-        listTopBox.pack_start(listIndexEntry, Gtk::PACK_SHRINK, 5);
-        
-        listBottomBox.pack_start(listAppendButton, Gtk::PACK_SHRINK, 5);
-        listBottomBox.pack_start(listPrependButton, Gtk::PACK_SHRINK, 5);
-        listBottomBox.pack_start(listInsertButton, Gtk::PACK_SHRINK, 5);
-        listBottomBox.pack_start(listGetButton, Gtk::PACK_SHRINK, 5);
-        listBottomBox.pack_start(listConcatButton, Gtk::PACK_SHRINK, 5);
-        listBottomBox.pack_start(listSubseqButton, Gtk::PACK_SHRINK, 5);
-        listBottomBox.pack_start(listClearButton, Gtk::PACK_SHRINK, 5);
-        
-        listPage.pack_start(listTopBox, Gtk::PACK_SHRINK, 5);
-        listPage.pack_start(listScroll, Gtk::PACK_EXPAND_WIDGET, 5);
-        listPage.pack_start(listBottomBox, Gtk::PACK_SHRINK, 5);
-        
+        listScroll.set_hexpand(true); listScroll.set_vexpand(true);
+
+        listTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK,5);
+        listTopBox.pack_start(listValueEntry, Gtk::PACK_SHRINK,5);
+        listTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK,5);
+        listTopBox.pack_start(listIndexEntry, Gtk::PACK_SHRINK,5);
+
+        listBottomBox.pack_start(listAppendButton, Gtk::PACK_SHRINK,5);
+        listBottomBox.pack_start(listPrependButton, Gtk::PACK_SHRINK,5);
+        listBottomBox.pack_start(listInsertButton, Gtk::PACK_SHRINK,5);
+        listBottomBox.pack_start(listGetButton, Gtk::PACK_SHRINK,5);
+        listBottomBox.pack_start(listConcatButton, Gtk::PACK_SHRINK,5);
+        listBottomBox.pack_start(listSubseqButton, Gtk::PACK_SHRINK,5);
+        listBottomBox.pack_start(listClearButton, Gtk::PACK_SHRINK,5);
+
+        listPage.pack_start(listTopBox, Gtk::PACK_SHRINK,5);
+        listPage.pack_start(listScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        listPage.pack_start(listBottomBox, Gtk::PACK_SHRINK,5);
         notebook.append_page(listPage, "ListSequence");
+
         
         mutableBuffer = Gtk::TextBuffer::create();
-        mutableOutput.set_buffer(mutableBuffer);
-        mutableOutput.set_editable(false);
+        mutableOutput.set_buffer(mutableBuffer); mutableOutput.set_editable(false);
         mutableScroll.add(mutableOutput);
         mutableScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        mutableScroll.set_hexpand(true);
-        mutableScroll.set_vexpand(true);
-        
-        mutableTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
-        mutableTopBox.pack_start(mutableValueEntry, Gtk::PACK_SHRINK, 5);
-        
-        mutableBottomBox.pack_start(mutableAppendButton, Gtk::PACK_SHRINK, 5);
-        mutableBottomBox.pack_start(mutablePrependButton, Gtk::PACK_SHRINK, 5);
-        mutableBottomBox.pack_start(mutableInsertButton, Gtk::PACK_SHRINK, 5);
-        
-        mutablePage.pack_start(mutableTopBox, Gtk::PACK_SHRINK, 5);
-        mutablePage.pack_start(mutableScroll, Gtk::PACK_EXPAND_WIDGET, 5);
-        mutablePage.pack_start(mutableBottomBox, Gtk::PACK_SHRINK, 5);
-        
+        mutableScroll.set_hexpand(true); mutableScroll.set_vexpand(true);
+
+        mutableTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK,5);
+        mutableTopBox.pack_start(mutableValueEntry, Gtk::PACK_SHRINK,5);
+
+        mutableBottomBox.pack_start(mutableAppendButton, Gtk::PACK_SHRINK,5);
+        mutableBottomBox.pack_start(mutablePrependButton, Gtk::PACK_SHRINK,5);
+        mutableBottomBox.pack_start(mutableInsertButton, Gtk::PACK_SHRINK,5);
+
+        mutablePage.pack_start(mutableTopBox, Gtk::PACK_SHRINK,5);
+        mutablePage.pack_start(mutableScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        mutablePage.pack_start(mutableBottomBox, Gtk::PACK_SHRINK,5);
         notebook.append_page(mutablePage, "MutableArraySequence");
+
         
         immutableBuffer = Gtk::TextBuffer::create();
-        immutableOutput.set_buffer(immutableBuffer);
-        immutableOutput.set_editable(false);
+        immutableOutput.set_buffer(immutableBuffer); immutableOutput.set_editable(false);
         immutableScroll.add(immutableOutput);
         immutableScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        immutableScroll.set_hexpand(true);
-        immutableScroll.set_vexpand(true);
-        
-        immutableTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
-        immutableTopBox.pack_start(immutableValueEntry, Gtk::PACK_SHRINK, 5);
-        immutableTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
-        immutableTopBox.pack_start(immutableIndexEntry, Gtk::PACK_SHRINK, 5);
-        
-        immutableBottomBox.pack_start(immutableAppendButton, Gtk::PACK_SHRINK, 5);
-        immutableBottomBox.pack_start(immutablePrependButton, Gtk::PACK_SHRINK, 5);
-        immutableBottomBox.pack_start(immutableInsertButton, Gtk::PACK_SHRINK, 5);
-        
-        immutablePage.pack_start(immutableTopBox, Gtk::PACK_SHRINK, 5);
-        immutablePage.pack_start(immutableScroll, Gtk::PACK_EXPAND_WIDGET, 5);
-        immutablePage.pack_start(immutableBottomBox, Gtk::PACK_SHRINK, 5);
-        
+        immutableScroll.set_hexpand(true); immutableScroll.set_vexpand(true);
+
+        immutableTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK,5);
+        immutableTopBox.pack_start(immutableValueEntry, Gtk::PACK_SHRINK,5);
+        immutableTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK,5);
+        immutableTopBox.pack_start(immutableIndexEntry, Gtk::PACK_SHRINK,5);
+
+        immutableBottomBox.pack_start(immutableAppendButton, Gtk::PACK_SHRINK,5);
+        immutableBottomBox.pack_start(immutablePrependButton, Gtk::PACK_SHRINK,5);
+        immutableBottomBox.pack_start(immutableInsertButton, Gtk::PACK_SHRINK,5);
+
+        immutablePage.pack_start(immutableTopBox, Gtk::PACK_SHRINK,5);
+        immutablePage.pack_start(immutableScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        immutablePage.pack_start(immutableBottomBox, Gtk::PACK_SHRINK,5);
         notebook.append_page(immutablePage, "ImmutableArraySequence");
+
         
         bitBuffer = Gtk::TextBuffer::create();
-        bitOutput.set_buffer(bitBuffer);
-        bitOutput.set_editable(false);
+        bitOutput.set_buffer(bitBuffer); bitOutput.set_editable(false);
         bitScroll.add(bitOutput);
         bitScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        bitScroll.set_hexpand(true);
-        bitScroll.set_vexpand(true);
-        
-        bitTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
-        bitTopBox.pack_start(bitIndexEntry, Gtk::PACK_SHRINK, 5);
-        bitTopBox.pack_start(*makeLabel("Бит (0/1):"), Gtk::PACK_SHRINK, 5);
-        bitTopBox.pack_start(bitValueEntry, Gtk::PACK_SHRINK, 5);
-        bitTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK, 5);
-        bitTopBox.pack_start(bitSizeEntry, Gtk::PACK_SHRINK, 5);
-        
-        bitBottomBox.pack_start(bitSetButton, Gtk::PACK_SHRINK, 5);
-        bitBottomBox.pack_start(bitAndButton, Gtk::PACK_SHRINK, 5);
-        bitBottomBox.pack_start(bitOrButton, Gtk::PACK_SHRINK, 5);
-        bitBottomBox.pack_start(bitXorButton, Gtk::PACK_SHRINK, 5);
-        bitBottomBox.pack_start(bitNotButton, Gtk::PACK_SHRINK, 5);
-        
-        bitPage.pack_start(bitTopBox, Gtk::PACK_SHRINK, 5);
-        bitPage.pack_start(bitScroll, Gtk::PACK_EXPAND_WIDGET, 5);
-        bitPage.pack_start(bitBottomBox, Gtk::PACK_SHRINK, 5);
-        
+        bitScroll.set_hexpand(true); bitScroll.set_vexpand(true);
+
+        bitTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK,5);
+        bitTopBox.pack_start(bitIndexEntry, Gtk::PACK_SHRINK,5);
+        bitTopBox.pack_start(*makeLabel("Бит (0/1):"), Gtk::PACK_SHRINK,5);
+        bitTopBox.pack_start(bitValueEntry, Gtk::PACK_SHRINK,5);
+        bitTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK,5);
+        bitTopBox.pack_start(bitSizeEntry, Gtk::PACK_SHRINK,5);
+
+        bitBottomBox.pack_start(bitSetButton, Gtk::PACK_SHRINK,5);
+        bitBottomBox.pack_start(bitAndButton, Gtk::PACK_SHRINK,5);
+        bitBottomBox.pack_start(bitOrButton, Gtk::PACK_SHRINK,5);
+        bitBottomBox.pack_start(bitXorButton, Gtk::PACK_SHRINK,5);
+        bitBottomBox.pack_start(bitNotButton, Gtk::PACK_SHRINK,5);
+
+        bitPage.pack_start(bitTopBox, Gtk::PACK_SHRINK,5);
+        bitPage.pack_start(bitScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        bitPage.pack_start(bitBottomBox, Gtk::PACK_SHRINK,5);
         notebook.append_page(bitPage, "BitSequence");
+
         
         funcBuffer = Gtk::TextBuffer::create();
-        funcOutput.set_buffer(funcBuffer);
-        funcOutput.set_editable(false);
+        funcOutput.set_buffer(funcBuffer); funcOutput.set_editable(false);
         funcScroll.add(funcOutput);
         funcScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        funcScroll.set_hexpand(true);
-        funcScroll.set_vexpand(true);
-        
-        seq1Box.pack_start(*makeLabel("Seq1:"), Gtk::PACK_SHRINK, 5);
-        seq1Box.pack_start(seq1Entry, Gtk::PACK_EXPAND_WIDGET, 5);
-        seq1Box.pack_start(seq1AddButton, Gtk::PACK_SHRINK, 5);
-        seq1Box.pack_start(seq1ClearButton, Gtk::PACK_SHRINK, 5);
-        
-        seq2Box.pack_start(*makeLabel("Seq2:"), Gtk::PACK_SHRINK, 5);
-        seq2Box.pack_start(seq2Entry, Gtk::PACK_EXPAND_WIDGET, 5);
-        seq2Box.pack_start(seq2AddButton, Gtk::PACK_SHRINK, 5);
-        seq2Box.pack_start(seq2ClearButton, Gtk::PACK_SHRINK, 5);
-        
-        funcButtonsBox.pack_start(mapButton, Gtk::PACK_SHRINK, 5);
-        funcButtonsBox.pack_start(whereButton, Gtk::PACK_SHRINK, 5);
-        funcButtonsBox.pack_start(reduceButton, Gtk::PACK_SHRINK, 5);
-        funcButtonsBox.pack_start(zipButton, Gtk::PACK_SHRINK, 5);
-        
-        funcBox.pack_start(seq1Box, Gtk::PACK_SHRINK, 5);
-        funcBox.pack_start(seq2Box, Gtk::PACK_SHRINK, 5);
-        funcBox.pack_start(funcButtonsBox, Gtk::PACK_SHRINK, 5);
-        funcBox.pack_start(funcScroll, Gtk::PACK_EXPAND_WIDGET, 5);
-        
-        funcPage.pack_start(funcBox, Gtk::PACK_EXPAND_WIDGET, 5);
+        funcScroll.set_hexpand(true); funcScroll.set_vexpand(true);
+
+        seq1Box.pack_start(*makeLabel("Seq1:"), Gtk::PACK_SHRINK,5);
+        seq1Box.pack_start(seq1Entry, Gtk::PACK_EXPAND_WIDGET,5);
+        seq1Box.pack_start(seq1AddButton, Gtk::PACK_SHRINK,5);
+        seq1Box.pack_start(seq1ClearButton, Gtk::PACK_SHRINK,5);
+
+        seq2Box.pack_start(*makeLabel("Seq2:"), Gtk::PACK_SHRINK,5);
+        seq2Box.pack_start(seq2Entry, Gtk::PACK_EXPAND_WIDGET,5);
+        seq2Box.pack_start(seq2AddButton, Gtk::PACK_SHRINK,5);
+        seq2Box.pack_start(seq2ClearButton, Gtk::PACK_SHRINK,5);
+
+        funcButtonsBox.pack_start(mapButton, Gtk::PACK_SHRINK,5);
+        funcButtonsBox.pack_start(whereButton, Gtk::PACK_SHRINK,5);
+        funcButtonsBox.pack_start(reduceButton, Gtk::PACK_SHRINK,5);
+        funcButtonsBox.pack_start(zipButton, Gtk::PACK_SHRINK,5);
+        funcButtonsBox.pack_start(splitButton, Gtk::PACK_SHRINK,5);
+        funcButtonsBox.pack_start(iteratorsButton, Gtk::PACK_SHRINK,5);
+        funcButtonsBox.pack_start(unzipButton, Gtk::PACK_SHRINK,5);
+
+        funcBox.pack_start(seq1Box, Gtk::PACK_SHRINK,5);
+        funcBox.pack_start(seq2Box, Gtk::PACK_SHRINK,5);
+        funcBox.pack_start(funcButtonsBox, Gtk::PACK_SHRINK,5);
+        funcBox.pack_start(funcScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        funcPage.pack_start(funcBox, Gtk::PACK_EXPAND_WIDGET,5);
         notebook.append_page(funcPage, "Map/Reduce");
+
         
-        arrayAppendButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayAppend));
-        arrayPrependButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayPrepend));
-        arrayInsertButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayInsert));
-        arrayGetButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayGet));
-        arrayConcatButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayConcat));
-        arraySubseqButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArraySubseq));
-        arrayClearButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayClear));
+        squareMatrixBuffer = Gtk::TextBuffer::create();
+        squareMatrixOutput.set_buffer(squareMatrixBuffer);
+        squareMatrixOutput.set_editable(false);
+        squareMatrixScroll.add(squareMatrixOutput);
+        squareMatrixScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
+        squareMatrixScroll.set_hexpand(true); squareMatrixScroll.set_vexpand(true);
+
+        squareMatrixTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK,5);
+        squareMatrixTopBox.pack_start(matrixSizeEntry, Gtk::PACK_SHRINK,5);
+        squareMatrixTopBox.pack_start(matrixCreateButton, Gtk::PACK_SHRINK,5);
+        squareMatrixTopBox.pack_start(matrixInputGrid, Gtk::PACK_SHRINK,5);
+
+        squareMatrixBottomBox.set_orientation(Gtk::ORIENTATION_VERTICAL);
+        squareMatrixBottomBox.set_spacing(5);
+        squareMatrixBottomBox.pack_start(matrixAddButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixScalarButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(scalarEntry, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixNormButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixSwapRowsButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixMultiplyRowButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixAddRowButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixSwapColsButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixMultiplyColButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixAddColButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixMultiplyButton, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(*makeLabel("i/j/t/s:"), Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(rowIndexEntry, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(targetEntry, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(sourceEntry, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(*makeLabel("множитель:"), Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(factorEntry, Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(*makeLabel("Значения через пробел:"), Gtk::PACK_SHRINK,5);
+        squareMatrixBottomBox.pack_start(matrixInitEntry, Gtk::PACK_EXPAND_WIDGET,5);
+        squareMatrixBottomBox.pack_start(matrixInitButton, Gtk::PACK_SHRINK,5);
+
+        squareMatrixPage.pack_start(squareMatrixTopBox, Gtk::PACK_SHRINK,5);
+        squareMatrixPage.pack_start(squareMatrixScroll, Gtk::PACK_EXPAND_WIDGET,5);
+        squareMatrixPage.pack_start(squareMatrixBottomBox, Gtk::PACK_SHRINK,5);
+        notebook.append_page(squareMatrixPage, "SquareMatrix");
+
         
-        listAppendButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListAppend));
-        listPrependButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListPrepend));
-        listInsertButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListInsert));
-        listGetButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListGet));
-        listConcatButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListConcat));
-        listSubseqButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListSubseq));
-        listClearButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onListClear));
-        
-        mutableAppendButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onMutableAppend));
-        mutablePrependButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onMutablePrepend));
-        mutableInsertButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onMutableInsert));
-        
-        immutableAppendButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onImmutableAppend));
-        immutablePrependButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onImmutablePrepend));
-        immutableInsertButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onImmutableInsert));
-        
-        bitSetButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitSet));
-        bitAndButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitAnd));
-        bitOrButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitOr));
-        bitXorButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitXor));
-        bitNotButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitNot));
-        
-        mapButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onMap));
-        whereButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onWhere));
-        reduceButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onReduce));
-        zipButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onZip));
-        
-        seq1AddButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onSeq1Add));
-        seq1ClearButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onSeq1Clear));
-        seq2AddButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onSeq2Add));
-        seq2ClearButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onSeq2Clear));
-        
+        arrayAppendButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArrayAppend));
+        arrayPrependButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArrayPrepend));
+        arrayInsertButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArrayInsert));
+        arrayGetButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArrayGet));
+        arrayConcatButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArrayConcat));
+        arraySubseqButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArraySubseq));
+        arrayClearButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onArrayClear));
+
+        listAppendButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListAppend));
+        listPrependButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListPrepend));
+        listInsertButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListInsert));
+        listGetButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListGet));
+        listConcatButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListConcat));
+        listSubseqButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListSubseq));
+        listClearButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onListClear));
+
+        mutableAppendButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMutableAppend));
+        mutablePrependButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMutablePrepend));
+        mutableInsertButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMutableInsert));
+
+        immutableAppendButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onImmutableAppend));
+        immutablePrependButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onImmutablePrepend));
+        immutableInsertButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onImmutableInsert));
+
+        bitSetButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onBitSet));
+        bitAndButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onBitAnd));
+        bitOrButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onBitOr));
+        bitXorButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onBitXor));
+        bitNotButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onBitNot));
+
+        mapButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMap));
+        whereButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onWhere));
+        reduceButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onReduce));
+        zipButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onZip));
+        splitButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onSplit));
+
+        seq1AddButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onSeq1Add));
+        seq1ClearButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onSeq1Clear));
+        seq2AddButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onSeq2Add));
+        seq2ClearButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onSeq2Clear));
+
+        iteratorsButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onDemoIterators));
+        unzipButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onUnzip));
+
+        matrixCreateButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixCreate));
+        matrixInitButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixInit));
+        matrixAddButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixAdd));
+        matrixScalarButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixScalar));
+        matrixNormButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixNorm));
+        matrixSwapRowsButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixSwapRows));
+        matrixMultiplyRowButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixMultiplyRow));
+        matrixAddRowButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixAddRow));
+        matrixSwapColsButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixSwapCols));
+        matrixMultiplyColButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixMultiplyCol));
+        matrixAddColButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixAddCol));
+        matrixMultiplyButton.signal_clicked().connect(sigc::mem_fun(*this,&MainWindow::onMatrixMultiply));
+
         show_all_children();
-        
+
         appendArrayOutput("Программа запущена");
         appendListOutput("Программа запущена");
         appendMutableOutput("Программа запущена");
-        appendImmutableOutput("Программа запущена");
+        appendImmutableOutput("Программа запущена. Начальная последовательность: " + getSequenceString(immutableSeq));
         appendBitOutput("Программа запущена");
         appendFuncOutput("Программа запущена");
+        appendParts("Вкладка SquareMatrix готова");
+    }
+
+    virtual ~MainWindow() {
+        delete arraySeq; delete listSeq; delete mutableSeq; delete immutableSeq;
+        delete bitSeq1; delete seq1; delete seq2;
+        for (size_t i=0; i<matrixEntries.GetSize(); ++i)
+            for (size_t j=0; j<matrixEntries.Get(i).GetSize(); ++j)
+                delete matrixEntries.Get(i).Get(j);
     }
 };
 

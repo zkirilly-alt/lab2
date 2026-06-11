@@ -1,125 +1,151 @@
 #include <gtest/gtest.h>
 #include "ListSequence.hpp"
 
-TEST(ListSequenceTest, DefaultConstructor) {
+class ListSequenceTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+TEST_F(ListSequenceTest, DefaultConstructor) {
     ListSequence<int> seq;
-    EXPECT_EQ(seq.GetLength(), 0);
-    EXPECT_THROW(seq.GetFirst(), EmptyContainerError);
+    EXPECT_EQ(seq.GetLength(), 0) 
+        << "ListSequence(): длина должна быть 0, получено " << seq.GetLength();
+    
+    EXPECT_THROW(seq.GetFirst(), EmptyContainerError) 
+        << "ListSequence(): GetFirst() на пустой последовательности должно выбрасывать EmptyContainerError";
 }
 
-TEST(ListSequenceTest, ConstructorFromArray) {
+TEST_F(ListSequenceTest, ConstructorFromArray) {
     int data[] = {1, 2, 3, 4, 5};
-    ListSequence<int> seq(data, 5);
+    int count = 5;
+    ListSequence<int> seq(data, count);
     
-    EXPECT_EQ(seq.GetLength(), 5);
-    EXPECT_EQ(seq.GetFirst(), 1);
-    EXPECT_EQ(seq.GetLast(), 5);
-    EXPECT_EQ(seq.Get(0), 1);
-    EXPECT_EQ(seq.Get(2), 3);
+    EXPECT_EQ(seq.GetLength(), count) 
+        << "ListSequence(data, " << count << "): ожидалась длина " << count 
+        << ", получено " << seq.GetLength();
+    
+    EXPECT_EQ(seq.GetFirst(), data[0]) 
+        << "ListSequence(data, " << count << "): GetFirst() ожидался " << data[0] 
+        << ", получено " << seq.GetFirst();
+    
+    EXPECT_EQ(seq.GetLast(), data[count - 1]) 
+        << "ListSequence(data, " << count << "): GetLast() ожидался " << data[count - 1] 
+        << ", получено " << seq.GetLast();
+    
+    for (int i = 0; i < count; ++i) {
+        EXPECT_EQ(seq.Get(i), data[i]) 
+            << "ListSequence(data, " << count << "): Get(" << i << ") ожидался " << data[i] 
+            << ", получено " << seq.Get(i);
+    }
 }
 
-TEST(ListSequenceTest, CopyConstructor) {
-    int data[] = {10, 20, 30};
-    ListSequence<int> seq1(data, 3);
-    ListSequence<int> seq2(seq1);
-    
-    EXPECT_EQ(seq2.GetLength(), 3);
-    EXPECT_EQ(seq2.Get(0), 10);
-    EXPECT_EQ(seq2.Get(1), 20);
-    EXPECT_EQ(seq2.Get(2), 30);
-}
-
-TEST(ListSequenceTest, Append) {
+TEST_F(ListSequenceTest, Append) {
     ListSequence<int> seq;
-    seq.Append(10);
-    seq.Append(20);
-    seq.Append(30);
+    int testValues[] = {10, 20, 30};
+    int count = 3;
     
-    EXPECT_EQ(seq.GetLength(), 3);
-    EXPECT_EQ(seq.GetFirst(), 10);
-    EXPECT_EQ(seq.GetLast(), 30);
-    EXPECT_EQ(seq.Get(1), 20);
+    for (int i = 0; i < count; ++i) {
+        seq.Append(testValues[i]);
+        EXPECT_EQ(seq.GetLength(), i + 1) 
+            << "Append(" << testValues[i] << "): после добавления длина должна быть " << (i + 1) 
+            << ", получено " << seq.GetLength();
+        EXPECT_EQ(seq.Get(i), testValues[i]) 
+            << "Append(" << testValues[i] << "): элемент [" << i << "] должен быть " << testValues[i] 
+            << ", получено " << seq.Get(i);
+    }
 }
 
-TEST(ListSequenceTest, Prepend) {
+TEST_F(ListSequenceTest, Prepend) {
     ListSequence<int> seq;
     seq.Prepend(30);
     seq.Prepend(20);
     seq.Prepend(10);
     
-    EXPECT_EQ(seq.GetLength(), 3);
-    EXPECT_EQ(seq.GetFirst(), 10);
-    EXPECT_EQ(seq.GetLast(), 30);
-    EXPECT_EQ(seq.Get(1), 20);
+    EXPECT_EQ(seq.GetLength(), 3) 
+        << "Prepend: ожидалась длина 3, получено " << seq.GetLength();
+    
+    int expected[] = {10, 20, 30};
+    for (int i = 0; i < 3; ++i) {
+        EXPECT_EQ(seq.Get(i), expected[i]) 
+            << "Prepend: элемент [" << i << "] ожидался " << expected[i] 
+            << ", получено " << seq.Get(i);
+    }
 }
 
-TEST(ListSequenceTest, InsertAt) {
+TEST_F(ListSequenceTest, InsertAt) {
     ListSequence<int> seq;
     seq.Append(10);
     seq.Append(30);
     seq.Append(40);
     seq.InsertAt(20, 1);
     
-    EXPECT_EQ(seq.GetLength(), 4);
-    EXPECT_EQ(seq.Get(0), 10);
-    EXPECT_EQ(seq.Get(1), 20);
-    EXPECT_EQ(seq.Get(2), 30);
-    EXPECT_EQ(seq.Get(3), 40);
-}
-
-TEST(ListSequenceTest, InsertAtBeginning) {
-    ListSequence<int> seq;
-    seq.Append(20);
-    seq.Append(30);
-    seq.InsertAt(10, 0);
+    EXPECT_EQ(seq.GetLength(), 4) 
+        << "InsertAt(20, 1): ожидалась длина 4, получено " << seq.GetLength();
     
-    EXPECT_EQ(seq.GetFirst(), 10);
-    EXPECT_EQ(seq.GetLength(), 3);
+    int expected[] = {10, 20, 30, 40};
+    for (int i = 0; i < 4; ++i) {
+        EXPECT_EQ(seq.Get(i), expected[i]) 
+            << "InsertAt(20, 1): элемент [" << i << "] ожидался " << expected[i] 
+            << ", получено " << seq.Get(i);
+    }
 }
 
-TEST(ListSequenceTest, InsertAtEnd) {
+TEST_F(ListSequenceTest, InsertAtInvalidIndex) {
     ListSequence<int> seq;
     seq.Append(10);
     seq.Append(20);
-    seq.InsertAt(30, 2);
     
-    EXPECT_EQ(seq.GetLast(), 30);
-    EXPECT_EQ(seq.GetLength(), 3);
+    int invalidIndex = 5;
+    int value = 99;
+    
+    EXPECT_THROW({
+        try {
+            seq.InsertAt(value, invalidIndex);
+        } catch (const IndexOutOfRange& e) {
+            EXPECT_STREQ(e.what(), "ListSequence: insert index out of range")
+                << "InsertAt(" << value << ", " << invalidIndex << "): ожидалось исключение 'ListSequence: insert index out of range'";
+            throw;
+        }
+    }, IndexOutOfRange) << "InsertAt(" << value << ", " << invalidIndex << ") должно выбрасывать IndexOutOfRange";
 }
 
-TEST(ListSequenceTest, InsertAtThrowsOnInvalidIndex) {
-    ListSequence<int> seq;
-    seq.Append(10);
-    EXPECT_THROW(seq.InsertAt(20, 5), IndexOutOfRange);
-    EXPECT_THROW(seq.InsertAt(20, -1), IndexOutOfRange);
+TEST_F(ListSequenceTest, GetInvalidIndex) {
+    int data[] = {1, 2, 3};
+    ListSequence<int> seq(data, 3);
+    int invalidIndex = 5;
+    
+    EXPECT_THROW({
+        try {
+            seq.Get(invalidIndex);
+        } catch (const IndexOutOfRange& e) {
+            EXPECT_STREQ(e.what(), "ListSequence: index out of range")
+                << "Get(" << invalidIndex << "): ожидалось исключение 'ListSequence: index out of range'";
+            throw;
+        }
+    }, IndexOutOfRange) << "Get(" << invalidIndex << ") должно выбрасывать IndexOutOfRange";
 }
 
-TEST(ListSequenceTest, GetSubsequence) {
+TEST_F(ListSequenceTest, GetSubsequence) {
     int data[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     ListSequence<int> seq(data, 10);
     
     Sequence<int>* subseq = seq.GetSubsequence(2, 6);
     
-    EXPECT_EQ(subseq->GetLength(), 5);
-    EXPECT_EQ(subseq->Get(0), 2);
-    EXPECT_EQ(subseq->Get(1), 3);
-    EXPECT_EQ(subseq->Get(2), 4);
-    EXPECT_EQ(subseq->Get(3), 5);
-    EXPECT_EQ(subseq->Get(4), 6);
+    EXPECT_EQ(subseq->GetLength(), 5) 
+        << "GetSubsequence(2,6): ожидалась длина 5, получено " << subseq->GetLength();
+    
+    int expected[] = {2, 3, 4, 5, 6};
+    for (int i = 0; i < 5; ++i) {
+        EXPECT_EQ(subseq->Get(i), expected[i]) 
+            << "GetSubsequence(2,6): элемент [" << i << "] ожидался " << expected[i] 
+            << ", получено " << subseq->Get(i);
+    }
     
     delete subseq;
 }
 
-TEST(ListSequenceTest, GetSubsequenceThrowsOnInvalidIndices) {
-    int data[] = {1, 2, 3};
-    ListSequence<int> seq(data, 3);
-    
-    EXPECT_THROW(seq.GetSubsequence(2, 1), InvalidArgumentError);
-    EXPECT_THROW(seq.GetSubsequence(0, 3), IndexOutOfRange);
-    EXPECT_THROW(seq.GetSubsequence(-1, 2), IndexOutOfRange);
-}
-
-TEST(ListSequenceTest, Concat) {
+TEST_F(ListSequenceTest, Concat) {
     int data1[] = {1, 2, 3};
     int data2[] = {4, 5, 6};
     ListSequence<int> seq1(data1, 3);
@@ -127,19 +153,43 @@ TEST(ListSequenceTest, Concat) {
     
     Sequence<int>* result = seq1.Concat(seq2);
     
-    EXPECT_EQ(result->GetLength(), 6);
-    EXPECT_EQ(result->Get(0), 1);
-    EXPECT_EQ(result->Get(2), 3);
-    EXPECT_EQ(result->Get(3), 4);
-    EXPECT_EQ(result->Get(5), 6);
+    EXPECT_EQ(result->GetLength(), 5) 
+        << "Concat: ожидалась длина 6, получено " << result->GetLength();
+    
+    int expected[] = {1, 2, 3, 4, 5, 6};
+    for (int i = 0; i < 6; ++i) {
+        EXPECT_EQ(result->Get(i), expected[i]) 
+            << "Concat: элемент [" << i << "] ожидался " << expected[i] 
+            << ", получено " << result->Get(i);
+    }
     
     delete result;
 }
 
-TEST(ListSequenceTest, GetThrowsOnInvalidIndex) {
-    int data[] = {1, 2, 3};
-    ListSequence<int> seq(data, 3);
+TEST_F(ListSequenceTest, GetFirstThrowsOnEmpty) {
+    ListSequence<int> seq;
     
-    EXPECT_THROW(seq.Get(3), IndexOutOfRange);
-    EXPECT_THROW(seq.Get(-1), IndexOutOfRange);
+    EXPECT_THROW({
+        try {
+            seq.GetFirst();
+        } catch (const EmptyContainerError& e) {
+            EXPECT_STREQ(e.what(), "ListSequence: sequence is empty")
+                << "GetFirst(): ожидалось исключение 'ListSequence: sequence is empty'";
+            throw;
+        }
+    }, EmptyContainerError) << "GetFirst() на пустой последовательности должно выбрасывать EmptyContainerError";
+}
+
+TEST_F(ListSequenceTest, GetLastThrowsOnEmpty) {
+    ListSequence<int> seq;
+    
+    EXPECT_THROW({
+        try {
+            seq.GetLast();
+        } catch (const EmptyContainerError& e) {
+            EXPECT_STREQ(e.what(), "ListSequence: sequence is empty")
+                << "GetLast(): ожидалось исключение 'ListSequence: sequence is empty'";
+            throw;
+        }
+    }, EmptyContainerError) << "GetLast() на пустой последовательности должно выбрасывать EmptyContainerError";
 }

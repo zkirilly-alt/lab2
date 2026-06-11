@@ -1,167 +1,54 @@
 #pragma once
 #include "Sequence.hpp"
-#include <vector>
+#include "Exception.hpp"
 #include <cstddef>
+#include <cstring>
+#include <cstdint>
 
 class BitSequence : public Sequence<bool> {
 private:
-    std::vector<bool> bits;
-    
-    void checkIndex(int index) const {
-        if (index < 0 || static_cast<size_t>(index) >= bits.size()) {
-            throw IndexOutOfRange("BitSequence: index out of range");
-        }
-    }
+    uint8_t* data;
+    size_t numBits;
+    size_t numBytes;
+
+    void allocate(size_t bits);
+    void copyFrom(const BitSequence& other);
+    void free();
+    void checkIndex(int index) const;
+    void setBit(size_t index, bool value);
+    bool getBit(size_t index) const;
+    void setBitInArray(uint8_t* arr, size_t index, bool value) const;
 
 public:
-    BitSequence() {}
-    
-    explicit BitSequence(size_t size) : bits(size, false) {}
-    
-    BitSequence(const bool* items, int count) {
-        for (int i = 0; i < count; ++i) {
-            bits.push_back(items[i]);
-        }
-    }
-    
-    BitSequence(const BitSequence& other) : bits(other.bits) {}
-    
-    ~BitSequence() {}
-    
-    BitSequence& operator=(const BitSequence& other) {
-        if (this != &other) {
-            bits = other.bits;
-        }
-        return *this;
-    }
-    
-    bool GetFirst() const override {
-        if (bits.empty()) {
-            throw EmptyContainerError("BitSequence: sequence is empty");
-        }
-        return bits[0];
-    }
-    
-    bool GetLast() const override {
-        if (bits.empty()) {
-            throw EmptyContainerError("BitSequence: sequence is empty");
-        }
-        return bits[bits.size() - 1];
-    }
-    
-    bool Get(int index) const override {
-        checkIndex(index);
-        return bits[static_cast<size_t>(index)];
-    }
-    
-    Sequence<bool>* GetSubsequence(int startIndex, int endIndex) const override {
-        checkIndex(startIndex);
-        checkIndex(endIndex);
-        if (startIndex > endIndex) {
-            throw InvalidArgumentError("BitSequence: start index > end index");
-        }
-        
-        BitSequence* result = new BitSequence();
-        for (int i = startIndex; i <= endIndex; ++i) {
-            result->Append(bits[static_cast<size_t>(i)]);
-        }
-        return result;
-    }
-    
-    int GetLength() const override {
-        return static_cast<int>(bits.size());
-    }
-    
-    void Append(const bool& item) override {
-        bits.push_back(item);
-    }
-    
-    void Prepend(const bool& item) override {
-        bits.insert(bits.begin(), item);
-    }
-    
-    void InsertAt(const bool& item, int index) override {
-        if (index < 0 || static_cast<size_t>(index) > bits.size()) {
-            throw IndexOutOfRange("BitSequence: insert index out of range");
-        }
-        bits.insert(bits.begin() + index, item);
-    }
-    
-    Sequence<bool>* Concat(const Sequence<bool>& other) const override {
-        BitSequence* result = new BitSequence(*this);
-        for (int i = 0; i < other.GetLength(); ++i) {
-            result->Append(other.Get(i));
-        }
-        return result;
-    }
-    
-    void Set(size_t index, bool value) {
-        if (index >= bits.size()) {
-            throw IndexOutOfRange("BitSequence: index out of range");
-        }
-        bits[index] = value;
-    }
-    
-    bool Get(size_t index) const {
-        if (index >= bits.size()) {
-            throw IndexOutOfRange("BitSequence: index out of range");
-        }
-        return bits[index];
-    }
-    
-    BitSequence operator&(const BitSequence& other) const {
-        if (bits.size() != other.bits.size()) {
-            throw InvalidArgumentError("BitSequence AND: size mismatch");
-        }
-        
-        BitSequence result;
-        for (size_t i = 0; i < bits.size(); ++i) {
-            result.Append(bits[i] && other.bits[i]);
-        }
-        return result;
-    }
-    
-    BitSequence operator|(const BitSequence& other) const {
-        if (bits.size() != other.bits.size()) {
-            throw InvalidArgumentError("BitSequence OR: size mismatch");
-        }
-        
-        BitSequence result;
-        for (size_t i = 0; i < bits.size(); ++i) {
-            result.Append(bits[i] || other.bits[i]);
-        }
-        return result;
-    }
-    
-    BitSequence operator^(const BitSequence& other) const {
-        if (bits.size() != other.bits.size()) {
-            throw InvalidArgumentError("BitSequence XOR: size mismatch");
-        }
-        
-        BitSequence result;
-        for (size_t i = 0; i < bits.size(); ++i) {
-            result.Append(bits[i] != other.bits[i]);
-        }
-        return result;
-    }
-    
-    BitSequence operator~() const {
-        BitSequence result;
-        for (size_t i = 0; i < bits.size(); ++i) {
-            result.Append(!bits[i]);
-        }
-        return result;
-    }
-    
-    void operator&=(const BitSequence& other) {
-        *this = *this & other;
-    }
-    
-    void operator|=(const BitSequence& other) {
-        *this = *this | other;
-    }
-    
-    void operator^=(const BitSequence& other) {
-        *this = *this ^ other;
-    }
+    BitSequence();
+    explicit BitSequence(size_t size);
+    BitSequence(const bool* items, int count);
+    BitSequence(const BitSequence& other);
+    BitSequence(BitSequence&& other) noexcept;
+    ~BitSequence();
+    BitSequence& operator=(const BitSequence& other);
+    BitSequence& operator=(BitSequence&& other) noexcept;
+
+    bool GetFirst() const override;
+    bool GetLast() const override;
+    bool Get(int index) const override;
+    Sequence<bool>* GetSubsequence(int startIndex, int endIndex) const override;
+    int GetLength() const override;
+    void Append(const bool& item) override;
+    void Prepend(const bool& item) override;
+    void InsertAt(const bool& item, int index) override;
+    Sequence<bool>* Concat(const Sequence<bool>& other) const override;
+    void RemoveAt(int index) override;
+    void Clear() override;
+
+    void Set(size_t index, bool value);
+    bool Get(size_t index) const;
+
+    BitSequence operator&(const BitSequence& other) const;
+    BitSequence operator|(const BitSequence& other) const;
+    BitSequence operator^(const BitSequence& other) const;
+    BitSequence operator~() const;
+    void operator&=(const BitSequence& other);
+    void operator|=(const BitSequence& other);
+    void operator^=(const BitSequence& other);
 };

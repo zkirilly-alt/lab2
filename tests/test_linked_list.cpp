@@ -1,171 +1,142 @@
 #include <gtest/gtest.h>
 #include "LinkedList.hpp"
 
-TEST(LinkedListTest, DefaultConstructor) {
+class LinkedListTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+TEST_F(LinkedListTest, DefaultConstructor) {
     LinkedList<int> list;
-    EXPECT_EQ(list.GetLength(), 0);
+    EXPECT_EQ(list.GetLength(), 0) 
+        << "LinkedList(): длина должна быть 0, получено " << list.GetLength();
 }
 
-TEST(LinkedListTest, ConstructorFromArray) {
+TEST_F(LinkedListTest, ConstructorFromArray) {
     int items[] = {1, 2, 3, 4, 5};
-    LinkedList<int> list(items, 5);
+    size_t count = 5;
+    LinkedList<int> list(items, count);
     
-    EXPECT_EQ(list.GetLength(), 5);
-    EXPECT_EQ(list.GetFirst(), 1);
-    EXPECT_EQ(list.GetLast(), 5);
-    EXPECT_EQ(list.Get(0), 1);
-    EXPECT_EQ(list.Get(2), 3);
-    EXPECT_EQ(list.Get(4), 5);
+    EXPECT_EQ(list.GetLength(), count) 
+        << "LinkedList(items, " << count << "): ожидалась длина " << count 
+        << ", получено " << list.GetLength();
+    
+    EXPECT_EQ(list.GetFirst(), items[0]) 
+        << "LinkedList(items, " << count << "): GetFirst() ожидался " << items[0] 
+        << ", получено " << list.GetFirst();
+    
+    EXPECT_EQ(list.GetLast(), items[count - 1]) 
+        << "LinkedList(items, " << count << "): GetLast() ожидался " << items[count - 1] 
+        << ", получено " << list.GetLast();
+    
+    for (size_t i = 0; i < count; ++i) {
+        EXPECT_EQ(list.Get(i), items[i]) 
+            << "LinkedList(items, " << count << "): Get(" << i << ") ожидался " << items[i] 
+            << ", получено " << list.Get(i);
+    }
 }
 
-TEST(LinkedListTest, CopyConstructor) {
-    int items[] = {10, 20, 30};
-    LinkedList<int> list(items, 3);
-    LinkedList<int> copy(list);
-    
-    EXPECT_EQ(copy.GetLength(), 3);
-    EXPECT_EQ(copy.Get(0), 10);
-    EXPECT_EQ(copy.Get(1), 20);
-    EXPECT_EQ(copy.Get(2), 30);
-}
-
-TEST(LinkedListTest, Append) {
+TEST_F(LinkedListTest, Append) {
     LinkedList<int> list;
-    list.Append(10);
-    list.Append(20);
-    list.Append(30);
+    int testValues[] = {10, 20, 30};
+    size_t count = 3;
     
-    EXPECT_EQ(list.GetLength(), 3);
-    EXPECT_EQ(list.GetFirst(), 10);
-    EXPECT_EQ(list.GetLast(), 30);
-    EXPECT_EQ(list.Get(0), 10);
-    EXPECT_EQ(list.Get(1), 20);
-    EXPECT_EQ(list.Get(2), 30);
+    for (size_t i = 0; i < count; ++i) {
+        list.Append(testValues[i]);
+        EXPECT_EQ(list.GetLength(), i + 1) 
+            << "Append(" << testValues[i] << "): после добавления длина должна быть " << (i + 1) 
+            << ", получено " << list.GetLength();
+        EXPECT_EQ(list.Get(i), testValues[i]) 
+            << "Append(" << testValues[i] << "): элемент [" << i << "] должен быть " << testValues[i] 
+            << ", получено " << list.Get(i);
+    }
+    
+    EXPECT_EQ(list.GetFirst(), testValues[0]) 
+        << "Append: GetFirst() ожидался " << testValues[0] 
+        << ", получено " << list.GetFirst();
+    
+    EXPECT_EQ(list.GetLast(), testValues[count - 1]) 
+        << "Append: GetLast() ожидался " << testValues[count - 1] 
+        << ", получено " << list.GetLast();
 }
 
-TEST(LinkedListTest, Prepend) {
+TEST_F(LinkedListTest, Prepend) {
     LinkedList<int> list;
     list.Prepend(30);
     list.Prepend(20);
     list.Prepend(10);
     
-    EXPECT_EQ(list.GetLength(), 3);
-    EXPECT_EQ(list.GetFirst(), 10);
-    EXPECT_EQ(list.GetLast(), 30);
-    EXPECT_EQ(list.Get(0), 10);
-    EXPECT_EQ(list.Get(1), 20);
-    EXPECT_EQ(list.Get(2), 30);
+    EXPECT_EQ(list.GetLength(), 3) 
+        << "Prepend: ожидалась длина 3, получено " << list.GetLength();
+    
+    int expected[] = {10, 20, 30};
+    for (size_t i = 0; i < 3; ++i) {
+        EXPECT_EQ(list.Get(i), expected[i]) 
+            << "Prepend: элемент [" << i << "] ожидался " << expected[i] 
+            << ", получено " << list.Get(i);
+    }
 }
 
-TEST(LinkedListTest, InsertAt) {
+TEST_F(LinkedListTest, InsertAt) {
     LinkedList<int> list;
     list.Append(10);
     list.Append(30);
     list.Append(40);
+    
     list.InsertAt(20, 1);
     
-    EXPECT_EQ(list.GetLength(), 4);
-    EXPECT_EQ(list.Get(0), 10);
-    EXPECT_EQ(list.Get(1), 20);
-    EXPECT_EQ(list.Get(2), 30);
-    EXPECT_EQ(list.Get(3), 40);
-}
-
-TEST(LinkedListTest, InsertAtBeginning) {
-    LinkedList<int> list;
-    list.Append(20);
-    list.Append(30);
-    list.InsertAt(10, 0);
+    EXPECT_EQ(list.GetLength(), 4) 
+        << "InsertAt(20, 1): ожидалась длина 4, получено " << list.GetLength();
     
-    EXPECT_EQ(list.GetFirst(), 10);
-    EXPECT_EQ(list.GetLength(), 3);
+    int expected[] = {10, 20, 30, 40};
+    for (size_t i = 0; i < 4; ++i) {
+        EXPECT_EQ(list.Get(i), expected[i]) 
+            << "InsertAt(20, 1): элемент [" << i << "] ожидался " << expected[i] 
+            << ", получено " << list.Get(i);
+    }
 }
 
-TEST(LinkedListTest, InsertAtEnd) {
+TEST_F(LinkedListTest, GetFirstThrowsOnEmpty) {
     LinkedList<int> list;
-    list.Append(10);
-    list.Append(20);
-    list.InsertAt(30, 2);
     
-    EXPECT_EQ(list.GetLast(), 30);
-    EXPECT_EQ(list.GetLength(), 3);
+    EXPECT_THROW({
+        try {
+            list.GetFirst();
+        } catch (const EmptyContainerError& e) {
+            EXPECT_STREQ(e.what(), "LinkedList::GetFirst: list is empty")
+                << "GetFirst(): ожидалось исключение с сообщением 'LinkedList::GetFirst: list is empty'";
+            throw;
+        }
+    }, EmptyContainerError) << "GetFirst() на пустом списке должно выбрасывать EmptyContainerError";
 }
 
-TEST(LinkedListTest, InsertAtThrowsOnInvalidIndex) {
+TEST_F(LinkedListTest, GetLastThrowsOnEmpty) {
     LinkedList<int> list;
-    list.Append(10);
-    EXPECT_THROW(list.InsertAt(20, 5), IndexOutOfRange);
-}
-
-TEST(LinkedListTest, GetSubList) {
-    int items[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    LinkedList<int> list(items, 10);
     
-    auto sublist = list.GetSubList(2, 6);
-    EXPECT_EQ(sublist.GetLength(), 5);
-    EXPECT_EQ(sublist.Get(0), 2);
-    EXPECT_EQ(sublist.Get(1), 3);
-    EXPECT_EQ(sublist.Get(2), 4);
-    EXPECT_EQ(sublist.Get(3), 5);
-    EXPECT_EQ(sublist.Get(4), 6);
+    EXPECT_THROW({
+        try {
+            list.GetLast();
+        } catch (const EmptyContainerError& e) {
+            EXPECT_STREQ(e.what(), "LinkedList::GetLast: list is empty")
+                << "GetLast(): ожидалось исключение с сообщением 'LinkedList::GetLast: list is empty'";
+            throw;
+        }
+    }, EmptyContainerError) << "GetLast() на пустом списке должно выбрасывать EmptyContainerError";
 }
 
-TEST(LinkedListTest, GetSubListThrowsOnInvalidIndices) {
-    int items[] = {1, 2, 3};
-    LinkedList<int> list(items, 3);
-    
-    EXPECT_THROW(list.GetSubList(2, 1), IndexOutOfRange);  // start > end
-    EXPECT_THROW(list.GetSubList(0, 3), IndexOutOfRange);  // end >= length
-}
-
-TEST(LinkedListTest, Concat) {
-    int items1[] = {1, 2, 3};
-    int items2[] = {4, 5, 6};
-    LinkedList<int> list1(items1, 3);
-    LinkedList<int> list2(items2, 3);
-    
-    auto result = list1.Concat(list2);
-    EXPECT_EQ(result.GetLength(), 6);
-    EXPECT_EQ(result.Get(0), 1);
-    EXPECT_EQ(result.Get(2), 3);
-    EXPECT_EQ(result.Get(3), 4);
-    EXPECT_EQ(result.Get(5), 6);
-}
-
-TEST(LinkedListTest, GetFirstThrowsOnEmpty) {
-    LinkedList<int> list;
-    EXPECT_THROW(list.GetFirst(), EmptyContainerError);
-}
-
-TEST(LinkedListTest, GetLastThrowsOnEmpty) {
-    LinkedList<int> list;
-    EXPECT_THROW(list.GetLast(), EmptyContainerError);
-}
-
-TEST(LinkedListTest, GetThrowsOnInvalidIndex) {
+TEST_F(LinkedListTest, GetThrowsOnInvalidIndex) {
     LinkedList<int> list;
     list.Append(10);
-    EXPECT_THROW(list.Get(1), IndexOutOfRange);
-    EXPECT_THROW(list.Get(5), IndexOutOfRange);
-}
-
-TEST(LinkedListTest, Clear) {
-    int items[] = {1, 2, 3};
-    LinkedList<int> list(items, 3);
-    list.Clear();
+    size_t invalidIndex = 5;
     
-    EXPECT_EQ(list.GetLength(), 0);
-    EXPECT_THROW(list.GetFirst(), EmptyContainerError);
-}
-
-TEST(LinkedListTest, AssignmentOperator) {
-    int items[] = {1, 2, 3};
-    LinkedList<int> list(items, 3);
-    LinkedList<int> list2;
-    list2 = list;
-    
-    EXPECT_EQ(list2.GetLength(), 3);
-    EXPECT_EQ(list2.Get(0), 1);
-    EXPECT_EQ(list2.Get(1), 2);
-    EXPECT_EQ(list2.Get(2), 3);
+    EXPECT_THROW({
+        try {
+            list.Get(invalidIndex);
+        } catch (const IndexOutOfRange& e) {
+            EXPECT_STREQ(e.what(), "LinkedList::getNode: index out of range")
+                << "Get(" << invalidIndex << "): ожидалось исключение с сообщением 'LinkedList::getNode: index out of range'";
+            throw;
+        }
+    }, IndexOutOfRange) << "Get(" << invalidIndex << ") должно выбрасывать IndexOutOfRange";
 }

@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include "ArraySequence.hpp"
 #include "Functional.hpp"
-#include "Option.hpp"
 
 int square(int x) {
     return x * x;
@@ -131,36 +130,3 @@ TEST(FunctionalTest, ReduceWithLambda) {
     EXPECT_EQ(result, 24);
 }
 
-TEST(OptionTest, SomeValue) {
-    Option<int> opt = Option<int>::Some(42);
-    
-    EXPECT_TRUE(opt.IsSome());
-    EXPECT_FALSE(opt.IsNone());
-    EXPECT_EQ(opt.Get(), 42);
-    EXPECT_EQ(opt.GetOrElse(0), 42);
-}
-
-TEST(OptionTest, NoneValue) {
-    Option<int> opt = Option<int>::None();
-    
-    EXPECT_FALSE(opt.IsSome());
-    EXPECT_TRUE(opt.IsNone());
-    EXPECT_THROW(opt.Get(), std::runtime_error);
-    EXPECT_EQ(opt.GetOrElse(100), 100);
-}
-
-TEST(TryMethodsTest, TryGetFirstOnEmpty) {
-    ArraySequence<int> seq;
-    Option<int> opt = seq.TryGetFirst();
-    
-    EXPECT_TRUE(opt.IsNone());
-}
-
-TEST(TryMethodsTest, TryGetFirstOnNonEmpty) {
-    int data[] = {10, 20, 30};
-    ArraySequence<int> seq(data, 3);
-    Option<int> opt = seq.TryGetFirst();
-    
-    EXPECT_TRUE(opt.IsSome());
-    EXPECT_EQ(opt.Get(), 10);
-}

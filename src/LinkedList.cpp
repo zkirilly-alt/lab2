@@ -1,21 +1,19 @@
-#include "LinkedList.h"
+#include "LinkedList.hpp"
 
 template<typename T>
 LinkedList<T>::LinkedList() : head(nullptr), tail(nullptr), length(0) {}
 
 template<typename T>
 LinkedList<T>::LinkedList(const T* items, size_t count) : LinkedList() {
-    for (size_t i = 0; i < count; ++i) {
-        Append(items[i]);
-    }
+    for (size_t i = 0; i < count; ++i) Append(items[i]);
 }
 
 template<typename T>
 LinkedList<T>::LinkedList(const LinkedList& other) : LinkedList() {
-    Node* current = other.head;
-    while (current) {
-        Append(current->data);
-        current = current->next;
+    Node* cur = other.head;
+    while (cur) {
+        Append(cur->data);
+        cur = cur->next;
     }
 }
 
@@ -28,10 +26,10 @@ template<typename T>
 LinkedList<T>& LinkedList<T>::operator=(const LinkedList& other) {
     if (this != &other) {
         Clear();
-        Node* current = other.head;
-        while (current) {
-            Append(current->data);
-            current = current->next;
+        Node* cur = other.head;
+        while (cur) {
+            Append(cur->data);
+            cur = cur->next;
         }
     }
     return *this;
@@ -39,54 +37,40 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList& other) {
 
 template<typename T>
 typename LinkedList<T>::Node* LinkedList<T>::getNode(size_t index) const {
-    if (index >= length) {
-        throw IndexOutOfRange("LinkedList::getNode: index out of range");
-    }
-    
-    Node* current;
+    if (index >= length) throw IndexOutOfRange("LinkedList::getNode: index out of range");
+
+    Node* cur;
     if (index < length / 2) {
-        current = head;
-        for (size_t i = 0; i < index; ++i) {
-            current = current->next;
-        }
+        cur = head;
+        for (size_t i = 0; i < index; ++i) cur = cur->next;
     } else {
-        current = tail;
-        for (size_t i = length - 1; i > index; --i) {
-            current = current->prev;
-        }
+        cur = tail;
+        for (size_t i = length - 1; i > index; --i) cur = cur->prev;
     }
-    return current;
+    return cur;
 }
 
 template<typename T>
 T& LinkedList<T>::GetFirst() {
-    if (length == 0) {
-        throw EmptyContainerError("LinkedList::GetFirst: list is empty");
-    }
+    if (!length) throw EmptyContainerError("LinkedList::GetFirst: list is empty");
     return head->data;
 }
 
 template<typename T>
 const T& LinkedList<T>::GetFirst() const {
-    if (length == 0) {
-        throw EmptyContainerError("LinkedList::GetFirst: list is empty");
-    }
+    if (!length) throw EmptyContainerError("LinkedList::GetFirst: list is empty");
     return head->data;
 }
 
 template<typename T>
 T& LinkedList<T>::GetLast() {
-    if (length == 0) {
-        throw EmptyContainerError("LinkedList::GetLast: list is empty");
-    }
+    if (!length) throw EmptyContainerError("LinkedList::GetLast: list is empty");
     return tail->data;
 }
 
 template<typename T>
 const T& LinkedList<T>::GetLast() const {
-    if (length == 0) {
-        throw EmptyContainerError("LinkedList::GetLast: list is empty");
-    }
+    if (!length) throw EmptyContainerError("LinkedList::GetLast: list is empty");
     return tail->data;
 }
 
@@ -102,85 +86,78 @@ const T& LinkedList<T>::Get(size_t index) const {
 
 template<typename T>
 void LinkedList<T>::Append(const T& item) {
-    Node* newNode = new Node(item, tail, nullptr);
-    if (tail) {
-        tail->next = newNode;
-    } else {
-        head = newNode;
-    }
-    tail = newNode;
+    Node* n = new Node(item, tail, nullptr);
+    if (tail) tail->next = n;
+    else head = n;
+    tail = n;
     ++length;
 }
 
 template<typename T>
 void LinkedList<T>::Prepend(const T& item) {
-    Node* newNode = new Node(item, nullptr, head);
-    if (head) {
-        head->prev = newNode;
-    } else {
-        tail = newNode;
-    }
-    head = newNode;
+    Node* n = new Node(item, nullptr, head);
+    if (head) head->prev = n;
+    else tail = n;
+    head = n;
     ++length;
 }
 
 template<typename T>
 void LinkedList<T>::InsertAt(const T& item, size_t index) {
-    if (index > length) {
-        throw IndexOutOfRange("LinkedList::InsertAt: index out of range");
-    }
-    
+    if (index > length) throw IndexOutOfRange("LinkedList::InsertAt: index out of range");
+
     if (index == 0) {
         Prepend(item);
-    } else if (index == length) {
-        Append(item);
-    } else {
-        Node* current = getNode(index);
-        Node* newNode = new Node(item, current->prev, current);
-        current->prev->next = newNode;
-        current->prev = newNode;
-        ++length;
+        return;
     }
+    if (index == length) {
+        Append(item);
+        return;
+    }
+
+    Node* cur = getNode(index);
+    Node* n = new Node(item, cur->prev, cur);
+    cur->prev->next = n;
+    cur->prev = n;
+    ++length;
 }
 
 template<typename T>
 LinkedList<T> LinkedList<T>::GetSubList(size_t startIndex, size_t endIndex) const {
-    if (startIndex > endIndex || endIndex >= length) {
+    if (startIndex > endIndex || endIndex >= length)
         throw IndexOutOfRange("LinkedList::GetSubList: invalid indices");
-    }
-    
-    LinkedList<T> result;
-    Node* current = getNode(startIndex);
+
+    LinkedList<T> r;
+    Node* cur = getNode(startIndex);
     for (size_t i = startIndex; i <= endIndex; ++i) {
-        result.Append(current->data);
-        current = current->next;
+        r.Append(cur->data);
+        cur = cur->next;
     }
-    return result;
+    return r;
 }
 
 template<typename T>
 LinkedList<T> LinkedList<T>::Concat(const LinkedList& other) const {
-    LinkedList<T> result(*this);
-    Node* current = other.head;
-    while (current) {
-        result.Append(current->data);
-        current = current->next;
+    LinkedList<T> r(*this);
+    Node* cur = other.head;
+    while (cur) {
+        r.Append(cur->data);
+        cur = cur->next;
     }
-    return result;
+    return r;
 }
 
 template<typename T>
 void LinkedList<T>::Clear() {
-    Node* current = head;
-    while (current) {
-        Node* next = current->next;
-        delete current;
-        current = next;
+    Node* cur = head;
+    while (cur) {
+        Node* next = cur->next;
+        delete cur;
+        cur = next;
     }
     head = tail = nullptr;
     length = 0;
 }
 
-// Явная инстанциация
 template class LinkedList<int>;
 template class LinkedList<double>;
