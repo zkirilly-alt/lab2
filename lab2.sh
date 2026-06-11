@@ -1,3 +1,4 @@
+
 case $1 in
     build)
         rm -rf build
@@ -10,6 +11,10 @@ case $1 in
         cd build
         ./src/lab2_ui
         ;;
+    gtk)
+        cd build
+        ./src/lab2_gtk
+        ;;
     test)
         cd build
         ./tests/run_tests
@@ -18,6 +23,5 @@ case $1 in
         rm -rf build
         ;;
     *)
-        echo "Использование: ./lab2.sh [build|run|test|clean]"
         ;;
 esac

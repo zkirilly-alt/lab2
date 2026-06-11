@@ -17,17 +17,17 @@ public:
     ApplicationModel();
     ~ApplicationModel();
 
-    // ----- ArraySequence operations -----
+    
     void arrayAppend(int value);
     void arrayPrepend(int value);
     void arrayInsertAt(int index, int value);
     int arrayGet(int index) const;
-    void arrayConcatWithDemo();      // creates [100,200,300] and concatenates, but does not store
+    void arrayConcatWithDemo();      
     void arraySubsequence(int startIndex);
     void arrayClear();
     std::string arrayToString() const;
 
-    // ----- ListSequence operations -----
+    
     void listAppend(int value);
     void listPrepend(int value);
     void listInsertAt(int index, int value);
@@ -37,27 +37,27 @@ public:
     void listClear();
     std::string listToString() const;
 
-    // ----- MutableArraySequence operations -----
+    
     void mutableAppend(int value);
     void mutablePrepend(int value);
     void mutableInsertAt(int index, int value);
     std::string mutableToString() const;
 
-    // ----- ImmutableArraySequence operations -----
+    
     void immutableAppend(int value);
     void immutablePrepend(int value);
     void immutableInsertAt(int index, int value);
     std::string immutableToString() const;
 
-    // ----- BitSequence operations -----
+    
     void bitSet(size_t index, bool value);
-    void bitAndWithSize(int size);   // creates second sequence of given size and does &
+    void bitAndWithSize(int size);   
     void bitOrWithSize(int size);
     void bitXorWithSize(int size);
     void bitNot();
     std::string bitToString() const;
 
-    // ----- Functional sequences (Seq1, Seq2) -----
+    
     void addToSeq1(const int* values, int count);
     void clearSeq1();
     void addToSeq2(const int* values, int count);
@@ -65,19 +65,19 @@ public:
     std::string seq1ToString() const;
     std::string seq2ToString() const;
 
-    // ----- Functional operations returning result as string -----
+    
     std::string mapSeq1() const;
     std::string whereSeq1() const;
     std::string reduceSeq1() const;
     std::string zipSeq1Seq2() const;
     std::string splitSeq1() const;
     std::string unzipSeq1Seq2() const;
-    std::string demoIterators() const;   // modifies seq1 (multiplies by 2) and returns description
+    std::string demoIterators() const;   
 
-    // ----- SquareMatrix operations -----
+    
     void matrixCreate(int size);
-    void matrixInitFromString(const std::string& values); // space-separated doubles
-    void matrixAddFromUI(const DynamicArray<DynamicArray<double>>& uiValues); // expects size x size values
+    void matrixInitFromString(const std::string& values); 
+    void matrixAddFromUI(const DynamicArray<DynamicArray<double>>& uiValues); 
     void matrixMultiplyByScalar(double scalar);
     double matrixNorm() const;
     void matrixSwapRows(int i, int j);
@@ -92,6 +92,23 @@ public:
     void matrixSet(int row, int col, double value);
     std::string matrixToString() const;
 
+    void complexMatrixCreate(int size);
+    void complexMatrixInitFromString(const std::string& reValues, const std::string& imValues);
+    void complexMatrixAddFromUI(const DynamicArray<DynamicArray<std::pair<double, double>>>& uiValues);
+    void complexMatrixMultiplyByScalar(double scalar);
+    double complexMatrixNorm() const;
+    void complexMatrixSwapRows(int i, int j);
+    void complexMatrixMultiplyRow(int i, double factor);
+    void complexMatrixAddRow(int target, int source, double factor);
+    void complexMatrixSwapCols(int i, int j);
+    void complexMatrixMultiplyCol(int j, double factor);
+    void complexMatrixAddCol(int target, int source, double factor);
+    void complexMatrixMultiplyMatrices(const DynamicArray<DynamicArray<std::pair<double, double>>>& uiValues);
+    int complexMatrixSize() const;
+    Complex complexMatrixGet(int row, int col) const;
+    void complexMatrixSet(int row, int col, const Complex& value);
+    std::string complexMatrixToString() const;
+
 private:
     Sequence<int>* arraySeq;
     Sequence<int>* listSeq;
@@ -101,6 +118,7 @@ private:
     Sequence<int>* seq1;
     Sequence<int>* seq2;
     SquareMatrix<double> currentMatrix;
+    SquareMatrix<Complex> currentComplexMatrix;
 
     std::string intSequenceToString(const Sequence<int>* seq) const;
     std::string boolSequenceToString(const Sequence<bool>* seq) const;

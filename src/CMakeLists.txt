@@ -1,5 +1,7 @@
 add_library(data_structures
     BitSequence.cpp
+    LinkedList.cpp
+    ApplicationModel.cpp
 )
 
 target_include_directories(data_structures PUBLIC
@@ -38,4 +40,8 @@ target_link_libraries(lab2_gtk PRIVATE
 target_compile_options(lab2_gtk PRIVATE
     ${GTKMM_CFLAGS_OTHER}
     -Wall -Wextra -Wpedantic
+)
+target_compile_options(lab2_gtk PRIVATE
+    ${GTKMM_CFLAGS_OTHER}
+    -Wall -Wextra -Wpedantic -Wno-reorder
 )

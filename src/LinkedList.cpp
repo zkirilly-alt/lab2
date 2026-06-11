@@ -1,6 +1,10 @@
 #include "LinkedList.hpp"
 
 template<typename T>
+LinkedList<T>::Node::Node(const T& data, Node* prev, Node* next)
+    : data(data), next(next), prev(prev) {}
+
+template<typename T>
 LinkedList<T>::LinkedList() : head(nullptr), tail(nullptr), length(0) {}
 
 template<typename T>
@@ -37,8 +41,7 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList& other) {
 
 template<typename T>
 typename LinkedList<T>::Node* LinkedList<T>::getNode(size_t index) const {
-    if (index >= length) throw IndexOutOfRange("LinkedList::getNode: индекс выходит за пределы");
-
+    if (index >= length) throw IndexOutOfRange(index, length);
     Node* cur;
     if (index < length / 2) {
         cur = head;
@@ -52,25 +55,25 @@ typename LinkedList<T>::Node* LinkedList<T>::getNode(size_t index) const {
 
 template<typename T>
 T& LinkedList<T>::GetFirst() {
-    if (!length) throw EmptyContainerError("LinkedList::GetFirst: список пуст");
+    if (length == 0) throw EmptyContainerError("LinkedList::GetFirst: список пуст");
     return head->data;
 }
 
 template<typename T>
 const T& LinkedList<T>::GetFirst() const {
-    if (!length) throw EmptyContainerError("LinkedList::GetFirst: список пуст");
+    if (length == 0) throw EmptyContainerError("LinkedList::GetFirst: список пуст");
     return head->data;
 }
 
 template<typename T>
 T& LinkedList<T>::GetLast() {
-    if (!length) throw EmptyContainerError("LinkedList::GetLast: список пуст");
+    if (length == 0) throw EmptyContainerError("LinkedList::GetLast: список пуст");
     return tail->data;
 }
 
 template<typename T>
 const T& LinkedList<T>::GetLast() const {
-    if (!length) throw EmptyContainerError("LinkedList::GetLast: список пуст");
+    if (length == 0) throw EmptyContainerError("LinkedList::GetLast: список пуст");
     return tail->data;
 }
 
@@ -82,6 +85,11 @@ T& LinkedList<T>::Get(size_t index) {
 template<typename T>
 const T& LinkedList<T>::Get(size_t index) const {
     return getNode(index)->data;
+}
+
+template<typename T>
+size_t LinkedList<T>::GetLength() const {
+    return length;
 }
 
 template<typename T>
@@ -104,47 +112,39 @@ void LinkedList<T>::Prepend(const T& item) {
 
 template<typename T>
 void LinkedList<T>::InsertAt(const T& item, size_t index) {
-    if (index > length) throw IndexOutOfRange("LinkedList::InsertAt: индекс выходит за пределы");
-
-    if (index == 0) {
-        Prepend(item);
-        return;
+    if (index > length) throw IndexOutOfRange(index, length);
+    if (index == 0) Prepend(item);
+    else if (index == length) Append(item);
+    else {
+        Node* cur = getNode(index);
+        Node* n = new Node(item, cur->prev, cur);
+        cur->prev->next = n;
+        cur->prev = n;
+        ++length;
     }
-    if (index == length) {
-        Append(item);
-        return;
-    }
-
-    Node* cur = getNode(index);
-    Node* n = new Node(item, cur->prev, cur);
-    cur->prev->next = n;
-    cur->prev = n;
-    ++length;
 }
 
 template<typename T>
 LinkedList<T> LinkedList<T>::GetSubList(size_t startIndex, size_t endIndex) const {
-    if (startIndex > endIndex || endIndex >= length)
-        throw IndexOutOfRange("LinkedList::GetSubList: неверные индексы");
-
-    LinkedList<T> r;
+    if (startIndex > endIndex || endIndex >= length) throw IndexOutOfRange(startIndex, length);
+    LinkedList<T> result;
     Node* cur = getNode(startIndex);
     for (size_t i = startIndex; i <= endIndex; ++i) {
-        r.Append(cur->data);
+        result.Append(cur->data);
         cur = cur->next;
     }
-    return r;
+    return result;
 }
 
 template<typename T>
 LinkedList<T> LinkedList<T>::Concat(const LinkedList& other) const {
-    LinkedList<T> r(*this);
+    LinkedList<T> result(*this);
     Node* cur = other.head;
     while (cur) {
-        r.Append(cur->data);
+        result.Append(cur->data);
         cur = cur->next;
     }
-    return r;
+    return result;
 }
 
 template<typename T>
@@ -158,6 +158,27 @@ void LinkedList<T>::Clear() {
     head = tail = nullptr;
     length = 0;
 }
+
+template<typename T>
+typename LinkedList<T>::Iterator LinkedList<T>::begin() {
+    return Iterator(head);
+}
+
+template<typename T>
+typename LinkedList<T>::Iterator LinkedList<T>::end() {
+    return Iterator(nullptr);
+}
+
+template<typename T>
+typename LinkedList<T>::ConstIterator LinkedList<T>::begin() const {
+    return ConstIterator(head);
+}
+
+template<typename T>
+typename LinkedList<T>::ConstIterator LinkedList<T>::end() const {
+    return ConstIterator(nullptr);
+}
+
 
 template class LinkedList<int>;
 template class LinkedList<double>;
