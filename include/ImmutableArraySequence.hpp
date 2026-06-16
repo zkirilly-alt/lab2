@@ -5,12 +5,24 @@ template<typename T>
 class ImmutableArraySequence : public ArraySequence<T> {
 public:
     ImmutableArraySequence() : ArraySequence<T>() {}
-
     ImmutableArraySequence(const T* data, int count) : ArraySequence<T>(data, count) {}
-
     ImmutableArraySequence(const DynamicArray<T>& array) : ArraySequence<T>(array) {}
-
     ImmutableArraySequence(const ImmutableArraySequence<T>& other) : ArraySequence<T>(other) {}
+    ImmutableArraySequence(ImmutableArraySequence&& other) noexcept : ArraySequence<T>(std::move(other)) {}
+
+    ImmutableArraySequence<T>& operator=(const ImmutableArraySequence<T>& other) {
+        if (this != &other) {
+            ArraySequence<T>::operator=(other);
+        }
+        return *this;
+    }
+
+    ImmutableArraySequence<T>& operator=(ImmutableArraySequence&& other) noexcept {
+        if (this != &other) {
+            ArraySequence<T>::operator=(std::move(other));
+        }
+        return *this;
+    }
 
     ImmutableArraySequence<T>* AppendImmutable(const T& item) const {
         ImmutableArraySequence<T>* newSeq = new ImmutableArraySequence<T>(*this);

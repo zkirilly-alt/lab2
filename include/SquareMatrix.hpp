@@ -19,8 +19,25 @@ public:
 
     SquareMatrix(const SquareMatrix& other) : data(other.data), size(other.size) {}
 
+    SquareMatrix(SquareMatrix&& other) noexcept
+        : data(std::move(other.data)), size(other.size) {
+        other.size = 0;
+    }
+
     SquareMatrix& operator=(const SquareMatrix& other) {
-        if (this != &other) { data = other.data; size = other.size; }
+        if (this != &other) {
+            data = other.data;
+            size = other.size;
+        }
+        return *this;
+    }
+
+    SquareMatrix& operator=(SquareMatrix&& other) noexcept {
+        if (this != &other) {
+            data = std::move(other.data);
+            size = other.size;
+            other.size = 0;
+        }
         return *this;
     }
 

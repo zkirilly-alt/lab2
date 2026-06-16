@@ -18,10 +18,20 @@ public:
     ArraySequence(const T* data, int count) : items(data, static_cast<size_t>(count)) {}
     ArraySequence(const DynamicArray<T>& array) : items(array) {}
     ArraySequence(const ArraySequence<T>& other) : items(other.items) {}
+    ArraySequence(ArraySequence&& other) noexcept : items(std::move(other.items)) {}
+
     ArraySequence<T>& operator=(const ArraySequence<T>& other) {
         if (this != &other) items = other.items;
         return *this;
     }
+
+    ArraySequence<T>& operator=(ArraySequence&& other) noexcept {
+        if (this != &other) {
+            items = std::move(other.items);
+        }
+        return *this;
+    }
+
     ~ArraySequence() {}
 
     T GetFirst() const override {

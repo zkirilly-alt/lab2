@@ -22,6 +22,14 @@ LinkedList<T>::LinkedList(const LinkedList& other) : LinkedList() {
 }
 
 template<typename T>
+LinkedList<T>::LinkedList(LinkedList&& other) noexcept
+    : head(other.head), tail(other.tail), length(other.length) {
+    other.head = nullptr;
+    other.tail = nullptr;
+    other.length = 0;
+}
+
+template<typename T>
 LinkedList<T>::~LinkedList() {
     Clear();
 }
@@ -35,6 +43,20 @@ LinkedList<T>& LinkedList<T>::operator=(const LinkedList& other) {
             Append(cur->data);
             cur = cur->next;
         }
+    }
+    return *this;
+}
+
+template<typename T>
+LinkedList<T>& LinkedList<T>::operator=(LinkedList&& other) noexcept {
+    if (this != &other) {
+        Clear();
+        head = other.head;
+        tail = other.tail;
+        length = other.length;
+        other.head = nullptr;
+        other.tail = nullptr;
+        other.length = 0;
     }
     return *this;
 }
@@ -178,7 +200,6 @@ template<typename T>
 typename LinkedList<T>::ConstIterator LinkedList<T>::end() const {
     return ConstIterator(nullptr);
 }
-
 
 template class LinkedList<int>;
 template class LinkedList<double>;

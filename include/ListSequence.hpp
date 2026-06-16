@@ -18,10 +18,20 @@ public:
     ListSequence(const T* data, int count) : items(data, static_cast<size_t>(count)) {}
     ListSequence(const LinkedList<T>& list) : items(list) {}
     ListSequence(const ListSequence<T>& other) : items(other.items) {}
+    ListSequence(ListSequence&& other) noexcept : items(std::move(other.items)) {}
+
     ListSequence<T>& operator=(const ListSequence<T>& other) {
         if (this != &other) items = other.items;
         return *this;
     }
+
+    ListSequence<T>& operator=(ListSequence&& other) noexcept {
+        if (this != &other) {
+            items = std::move(other.items);
+        }
+        return *this;
+    }
+
     ~ListSequence() {}
 
     T GetFirst() const override {

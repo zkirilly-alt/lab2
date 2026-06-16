@@ -39,6 +39,12 @@ public:
         }
     }
 
+    DynamicArray(DynamicArray&& other) noexcept
+        : data(other.data), size(other.size) {
+        other.data = nullptr;
+        other.size = 0;
+    }
+
     ~DynamicArray() {
         delete[] data;
     }
@@ -55,6 +61,17 @@ public:
             } else {
                 data = nullptr;
             }
+        }
+        return *this;
+    }
+
+    DynamicArray& operator=(DynamicArray&& other) noexcept {
+        if (this != &other) {
+            delete[] data;
+            data = other.data;
+            size = other.size;
+            other.data = nullptr;
+            other.size = 0;
         }
         return *this;
     }
