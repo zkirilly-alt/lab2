@@ -283,7 +283,6 @@ void ApplicationModel::matrixSet(int row, int col, double value) { currentMatrix
 std::string ApplicationModel::matrixToString() const {
     return currentMatrix.ToString();
 }
-// ----- Complex SquareMatrix -----
 void ApplicationModel::complexMatrixCreate(int size) {
     currentComplexMatrix = SquareMatrix<Complex>(size);
 }

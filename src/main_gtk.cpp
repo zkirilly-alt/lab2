@@ -210,13 +210,21 @@ private:
         std::stringstream ss; (ss << ... << args); appendFuncOutput(Glib::ustring(ss.str()));
     }
 
-    int safe_stoi(const Glib::ustring& str, const std::string& fieldName = "") {
+    int safe_stoi(const Glib::ustring& str, const std::string& fieldName = "", bool allowNegative = true) {
         if (str.empty()) {
             std::stringstream ss;
             ss << "Поле " << fieldName << " пустое";
             throw InvalidArgumentError(ss.str());
         }
-        try { return std::stoi(str); }
+        try { 
+            int value = std::stoi(str);
+            if (!allowNegative && value < 0) {
+                std::stringstream ss;
+                ss << "Поле " << fieldName << " не может быть отрицательным: " << value;
+                throw InvalidArgumentError(ss.str());
+            }
+            return value;
+        }
         catch (const std::invalid_argument&) {
             std::stringstream ss;
             ss << "Поле " << fieldName << " содержит не число: " << str;
