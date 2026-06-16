@@ -9,7 +9,7 @@ private:
 
     void checkIndex(int index) const {
         if (index < 0 || static_cast<size_t>(index) >= items.GetSize()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetSize());
+            throw IndexOutOfRange(index, items.GetSize());
         }
     }
 
@@ -51,7 +51,7 @@ public:
 
     void Set(int index, const T& value) {
         if (index < 0 || static_cast<size_t>(index) >= items.GetSize()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetSize());
+            throw IndexOutOfRange(index, items.GetSize());
         }
         items.Set(static_cast<size_t>(index), value);
     }
@@ -85,7 +85,7 @@ public:
 
     void InsertAt(const T& item, int index) override {
         if (index < 0 || static_cast<size_t>(index) > items.GetSize()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetSize() + 1);
+            throw IndexOutOfRange(index, items.GetSize() + 1);
         }
         int newSize = static_cast<int>(items.GetSize()) + 1;
         T* tempData = new T[static_cast<size_t>(newSize)];
@@ -106,7 +106,7 @@ public:
 
     void RemoveAt(int index) override {
         if (index < 0 || static_cast<size_t>(index) >= items.GetSize()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetSize());
+            throw IndexOutOfRange(index, items.GetSize());
         }
         size_t newSize = items.GetSize() - 1;
         T* tempData = new T[newSize];

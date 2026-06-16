@@ -10,6 +10,11 @@ lab2_ui: src/*.cpp
 lab2_gtk: src/*.cpp
 	$(CXX) $(CXXFLAGS) src/*.cpp $(GTKMM) -o lab2_gtk
 
+run: lab2_ui
+	./lab2_ui
+
+gtk: lab2_gtk
+	./lab2_gtk
 
 clean:
 	rm -f lab2_ui lab2_gtk

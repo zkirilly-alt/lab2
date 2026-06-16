@@ -21,6 +21,7 @@ public:
     IndexOutOfRange(const char* message) : Exception(message), index(0), size(0), hasDetails(false) {}
     IndexOutOfRange(const std::string& message) : Exception(message), index(0), size(0), hasDetails(false) {}
     IndexOutOfRange(size_t idx, size_t sz) : Exception(""), index(idx), size(sz), hasDetails(true) {}
+    IndexOutOfRange(int idx, size_t sz) : Exception(""), index(static_cast<size_t>(idx)), size(sz), hasDetails(true) {}
     bool HasDetails() const { return hasDetails; }
     size_t GetIndex() const { return index; }
     size_t GetSize() const { return size; }

@@ -23,10 +23,10 @@ void BitSequence::free()
     numBytes = 0;
 }
 
-void BitSequence::checkIndex(int index  ) const
+void BitSequence::checkIndex(int index) const
 {
     if (index < 0 || static_cast<size_t>(index) >= numBits)
-        throw IndexOutOfRange(static_cast<size_t>(index), numBits);
+        throw IndexOutOfRange(index, numBits);
 }
 
 void BitSequence::setBit(size_t index, bool value)
@@ -181,7 +181,7 @@ void BitSequence::Prepend(const bool &item)
 void BitSequence::InsertAt(const bool &item, int index)
 {
     if (index < 0 || size_t(index) > numBits)
-        throw IndexOutOfRange(size_t(index), numBits + 1);
+        throw IndexOutOfRange(index, numBits + 1);
 
     size_t newBits = numBits + 1;
     size_t newBytes = (newBits + 7) / 8;

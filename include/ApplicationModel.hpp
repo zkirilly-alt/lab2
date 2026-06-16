@@ -26,12 +26,11 @@ public:
     void arrayPrepend(int value);
     void arrayInsertAt(int index, int value);
     int arrayGet(int index) const;
-    void arrayConcatWithDemo();      
+    void arrayConcatWithDemo();
     void arraySubsequence(int startIndex);
     void arrayClear();
     std::string arrayToString() const;
 
-    
     void listAppend(int value);
     void listPrepend(int value);
     void listInsertAt(int index, int value);
@@ -41,27 +40,23 @@ public:
     void listClear();
     std::string listToString() const;
 
-    
     void mutableAppend(int value);
     void mutablePrepend(int value);
     void mutableInsertAt(int index, int value);
     std::string mutableToString() const;
 
-    
     void immutableAppend(int value);
     void immutablePrepend(int value);
     void immutableInsertAt(int index, int value);
     std::string immutableToString() const;
 
-    
     void bitSet(size_t index, bool value);
-    void bitAndWithSize(int size);   
+    void bitAndWithSize(int size);
     void bitOrWithSize(int size);
     void bitXorWithSize(int size);
     void bitNot();
     std::string bitToString() const;
 
-    
     void addToSeq1(const int* values, int count);
     void clearSeq1();
     void addToSeq2(const int* values, int count);
@@ -69,19 +64,17 @@ public:
     std::string seq1ToString() const;
     std::string seq2ToString() const;
 
-    
     std::string mapSeq1() const;
     std::string whereSeq1() const;
     std::string reduceSeq1() const;
     std::string zipSeq1Seq2() const;
     std::string splitSeq1() const;
     std::string unzipSeq1Seq2() const;
-    std::string demoIterators() const;   
+    std::string demoIterators() const;
 
-    
     void matrixCreate(int size);
-    void matrixInitFromString(const std::string& values); 
-    void matrixAddFromUI(const DynamicArray<DynamicArray<double>>& uiValues); 
+    void matrixInitFromString(const std::string& values);
+    void matrixAddFromUI(const DynamicArray<DynamicArray<double>>& uiValues);
     void matrixMultiplyByScalar(double scalar);
     double matrixNorm() const;
     void matrixSwapRows(int i, int j);

@@ -45,14 +45,14 @@ public:
 
     T Get(int row, int col) const {
         if (row < 0 || row >= size || col < 0 || col >= size) {
-            throw IndexOutOfRange(static_cast<size_t>(row * size + col), static_cast<size_t>(size * size));
+            throw IndexOutOfRange(row, size);
         }
         return data.Get(row * size + col);
     }
 
     void Set(int row, int col, T value) {
         if (row < 0 || row >= size || col < 0 || col >= size) {
-            throw IndexOutOfRange(static_cast<size_t>(row * size + col), static_cast<size_t>(size * size));
+            throw IndexOutOfRange(row, size);
         }
         data.Set(row * size + col, value);
     }
@@ -84,7 +84,7 @@ public:
     }
 
     void SwapRows(int i, int j) {
-        if (i < 0 || i >= size || j < 0 || j >= size) throw IndexOutOfRange(static_cast<size_t>(i), static_cast<size_t>(size));
+        if (i < 0 || i >= size || j < 0 || j >= size) throw IndexOutOfRange(i, size);
         for (int col = 0; col < size; ++col) {
             T tmp = Get(i, col);
             Set(i, col, Get(j, col));
@@ -93,17 +93,17 @@ public:
     }
 
     void MultiplyRow(int i, T factor) {
-        if (i < 0 || i >= size) throw IndexOutOfRange(static_cast<size_t>(i), static_cast<size_t>(size));
+        if (i < 0 || i >= size) throw IndexOutOfRange(i, size);
         for (int col = 0; col < size; ++col) Set(i, col, Get(i, col) * factor);
     }
 
     void AddRow(int target, int source, T factor) {
-        if (target < 0 || target >= size || source < 0 || source >= size) throw IndexOutOfRange(static_cast<size_t>(target), static_cast<size_t>(size));
+        if (target < 0 || target >= size || source < 0 || source >= size) throw IndexOutOfRange(target, size);
         for (int col = 0; col < size; ++col) Set(target, col, Get(target, col) + Get(source, col) * factor);
     }
 
     void SwapCols(int i, int j) {
-        if (i < 0 || i >= size || j < 0 || j >= size) throw IndexOutOfRange(static_cast<size_t>(i), static_cast<size_t>(size));
+        if (i < 0 || i >= size || j < 0 || j >= size) throw IndexOutOfRange(i, size);
         for (int row = 0; row < size; ++row) {
             T tmp = Get(row, i);
             Set(row, i, Get(row, j));
@@ -112,12 +112,12 @@ public:
     }
 
     void MultiplyCol(int j, T factor) {
-        if (j < 0 || j >= size) throw IndexOutOfRange(static_cast<size_t>(j), static_cast<size_t>(size));
+        if (j < 0 || j >= size) throw IndexOutOfRange(j, size);
         for (int row = 0; row < size; ++row) Set(row, j, Get(row, j) * factor);
     }
 
     void AddCol(int target, int source, T factor) {
-        if (target < 0 || target >= size || source < 0 || source >= size) throw IndexOutOfRange(static_cast<size_t>(target), static_cast<size_t>(size));
+        if (target < 0 || target >= size || source < 0 || source >= size) throw IndexOutOfRange(target, size);
         for (int row = 0; row < size; ++row) Set(row, target, Get(row, target) + Get(row, source) * factor);
     }
 

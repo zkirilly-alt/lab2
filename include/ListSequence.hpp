@@ -9,7 +9,7 @@ private:
 
     void checkIndex(int index) const {
         if (index < 0 || static_cast<size_t>(index) >= items.GetLength()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetLength());
+            throw IndexOutOfRange(index, items.GetLength());
         }
     }
 
@@ -64,7 +64,7 @@ public:
 
     void InsertAt(const T& item, int index) override {
         if (index < 0 || static_cast<size_t>(index) > items.GetLength()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetLength());
+            throw IndexOutOfRange(index, items.GetLength());
         }
         items.InsertAt(item, static_cast<size_t>(index));
     }
@@ -77,7 +77,7 @@ public:
 
     void RemoveAt(int index) override {
         if (index < 0 || static_cast<size_t>(index) >= items.GetLength()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), items.GetLength());
+            throw IndexOutOfRange(index, items.GetLength());
         }
         LinkedList<T> newList;
         for (size_t i = 0; i < items.GetLength(); ++i) {

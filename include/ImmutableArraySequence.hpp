@@ -38,7 +38,7 @@ public:
 
     ImmutableArraySequence<T>* InsertAtImmutable(const T& item, int index) const {
         if (index < 0 || index > this->GetLength()) {
-            throw IndexOutOfRange(static_cast<size_t>(index), static_cast<size_t>(this->GetLength()));
+            throw IndexOutOfRange(index, this->GetLength());
         }
         ImmutableArraySequence<T>* newSeq = new ImmutableArraySequence<T>(*this);
         newSeq->InsertAt(item, index);
