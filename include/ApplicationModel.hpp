@@ -17,11 +17,6 @@ public:
     ApplicationModel();
     ~ApplicationModel();
 
-    ApplicationModel(const ApplicationModel&) = delete;
-    ApplicationModel& operator=(const ApplicationModel&) = delete;
-    ApplicationModel(ApplicationModel&&) = delete;
-    ApplicationModel& operator=(ApplicationModel&&) = delete;
-
     void arrayAppend(int value);
     void arrayPrepend(int value);
     void arrayInsertAt(int index, int value);

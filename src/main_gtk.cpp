@@ -110,7 +110,6 @@ private:
     Glib::RefPtr<Gtk::TextBuffer> bitBuffer;
     Glib::RefPtr<Gtk::TextBuffer> funcBuffer;
 
-    
     Gtk::Box squareMatrixPage;
     Gtk::Box squareMatrixTopBox;
     Gtk::Box squareMatrixBottomBox;
@@ -139,7 +138,6 @@ private:
     Gtk::Button matrixInitButton;
     Gtk::Button matrixAddButton;
 
-    
     Gtk::Box complexMatrixPage;
     Gtk::Box complexMatrixTopBox;
     Gtk::Box complexMatrixBottomBox;
@@ -169,7 +167,6 @@ private:
     Gtk::Button complexMatrixInitButton;
     Gtk::Button complexMatrixAddButton;
 
-    
     template<typename T>
     std::string toString(const T& value) { return std::to_string(value); }
     std::string toString(const char* value) { return std::string(value); }
@@ -216,7 +213,7 @@ private:
             ss << "Поле " << fieldName << " пустое";
             throw InvalidArgumentError(ss.str());
         }
-        try { 
+        try {
             int value = std::stoi(str);
             if (!allowNegative && value < 0) {
                 std::stringstream ss;
@@ -224,13 +221,11 @@ private:
                 throw InvalidArgumentError(ss.str());
             }
             return value;
-        }
-        catch (const std::invalid_argument&) {
+        } catch (const std::invalid_argument&) {
             std::stringstream ss;
             ss << "Поле " << fieldName << " содержит не число: " << str;
             throw InvalidArgumentError(ss.str());
-        }
-        catch (const std::out_of_range&) {
+        } catch (const std::out_of_range&) {
             std::stringstream ss;
             ss << "Число в поле " << fieldName << " вне допустимого диапазона";
             throw InvalidArgumentError(ss.str());
@@ -256,7 +251,6 @@ private:
         }
     }
 
-    
     void onArrayAppend() {
         try {
             int value = safe_stoi(arrayValueEntry.get_text(), "значение");
@@ -265,6 +259,7 @@ private:
             arrayValueEntry.set_text("");
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
+
     void onArrayPrepend() {
         try {
             int value = safe_stoi(arrayValueEntry.get_text(), "значение");
@@ -273,21 +268,24 @@ private:
             arrayValueEntry.set_text("");
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
+
     void onArrayInsert() {
         try {
-            int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс");
+            int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(arrayValueEntry.get_text(), "значение");
             model.arrayInsertAt(idx, val);
             appendArrayOutputParts("Вставить ", val, " в ", idx, ": ", model.arrayToString());
-            arrayIndexEntry.set_text(""); arrayValueEntry.set_text("");
+            arrayIndexEntry.set_text("");
+            arrayValueEntry.set_text("");
         } catch (const IndexOutOfRange& e) {
             if (e.HasDetails()) appendArrayOutputParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
             else appendArrayOutput(e.what());
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
+
     void onArrayGet() {
         try {
-            int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс");
+            int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс", false);
             int val = model.arrayGet(idx);
             appendArrayOutputParts("Получить[", idx, "] = ", val);
             arrayIndexEntry.set_text("");
@@ -296,23 +294,30 @@ private:
             else appendArrayOutput(e.what());
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
+
     void onArrayConcat() {
         try {
             model.arrayConcatWithDemo();
             appendArrayOutputParts("Склеить с [100,200,300]: ", model.arrayToString());
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
+
     void onArraySubseq() {
         try {
-            int start = safe_stoi(arrayIndexEntry.get_text(), "начальный индекс");
+            int start = safe_stoi(arrayIndexEntry.get_text(), "начальный индекс", false);
             model.arraySubsequence(start);
             appendArrayOutputParts("Подпоследовательность с ", start, ": ", model.arrayToString());
             arrayIndexEntry.set_text("");
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-    void onArrayClear() { try { model.arrayClear(); appendArrayOutputParts("Очистить: ", model.arrayToString()); } catch (const std::exception& e) { appendArrayOutput(e.what()); } }
 
-    
+    void onArrayClear() {
+        try {
+            model.arrayClear();
+            appendArrayOutputParts("Очистить: ", model.arrayToString());
+        } catch (const std::exception& e) { appendArrayOutput(e.what()); }
+    }
+
     void onListAppend() {
         try {
             int v = safe_stoi(listValueEntry.get_text(), "значение");
@@ -321,6 +326,7 @@ private:
             listValueEntry.set_text("");
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
+
     void onListPrepend() {
         try {
             int v = safe_stoi(listValueEntry.get_text(), "значение");
@@ -329,21 +335,24 @@ private:
             listValueEntry.set_text("");
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
+
     void onListInsert() {
         try {
-            int idx = safe_stoi(listIndexEntry.get_text(), "индекс");
+            int idx = safe_stoi(listIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(listValueEntry.get_text(), "значение");
             model.listInsertAt(idx, val);
             appendListOutputParts("Вставить ", val, " в ", idx, ": ", model.listToString());
-            listIndexEntry.set_text(""); listValueEntry.set_text("");
+            listIndexEntry.set_text("");
+            listValueEntry.set_text("");
         } catch (const IndexOutOfRange& e) {
             if (e.HasDetails()) appendListOutputParts("Ошибка: индекс ", e.GetIndex(), " вне диапазона [0, ", e.GetSize()-1, "]");
             else appendListOutput(e.what());
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
+
     void onListGet() {
         try {
-            int idx = safe_stoi(listIndexEntry.get_text(), "индекс");
+            int idx = safe_stoi(listIndexEntry.get_text(), "индекс", false);
             int val = model.listGet(idx);
             appendListOutputParts("Получить[", idx, "] = ", val);
             listIndexEntry.set_text("");
@@ -352,23 +361,30 @@ private:
             else appendListOutput(e.what());
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
+
     void onListConcat() {
         try {
             model.listConcatWithDemo();
             appendListOutputParts("Склеить с [100,200,300]: ", model.listToString());
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
+
     void onListSubseq() {
         try {
-            int start = safe_stoi(listIndexEntry.get_text(), "начальный индекс");
+            int start = safe_stoi(listIndexEntry.get_text(), "начальный индекс", false);
             model.listSubsequence(start);
             appendListOutputParts("Подпоследовательность с ", start, ": ", model.listToString());
             listIndexEntry.set_text("");
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-    void onListClear() { try { model.listClear(); appendListOutputParts("Очистить: ", model.listToString()); } catch (const std::exception& e) { appendListOutput(e.what()); } }
 
-    
+    void onListClear() {
+        try {
+            model.listClear();
+            appendListOutputParts("Очистить: ", model.listToString());
+        } catch (const std::exception& e) { appendListOutput(e.what()); }
+    }
+
     void onMutableAppend() {
         try {
             int v = safe_stoi(mutableValueEntry.get_text(), "значение");
@@ -377,6 +393,7 @@ private:
             mutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendMutableOutput(e.what()); }
     }
+
     void onMutablePrepend() {
         try {
             int v = safe_stoi(mutableValueEntry.get_text(), "значение");
@@ -385,9 +402,10 @@ private:
             mutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendMutableOutput(e.what()); }
     }
+
     void onMutableInsert() {
         try {
-            int idx = safe_stoi(mutableValueEntry.get_text(), "индекс");
+            int idx = safe_stoi(mutableValueEntry.get_text(), "индекс", false);
             int val = safe_stoi(mutableValueEntry.get_text(), "значение");
             model.mutableInsertAt(idx, val);
             appendMutableOutputParts("Mutable Вставить ", val, " в ", idx, ": ", model.mutableToString());
@@ -395,7 +413,6 @@ private:
         } catch (const std::exception& e) { appendMutableOutput(e.what()); }
     }
 
-    
     void onImmutableAppend() {
         try {
             int v = safe_stoi(immutableValueEntry.get_text(), "значение");
@@ -406,6 +423,7 @@ private:
             immutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
     }
+
     void onImmutablePrepend() {
         try {
             int v = safe_stoi(immutableValueEntry.get_text(), "значение");
@@ -416,49 +434,55 @@ private:
             immutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
     }
+
     void onImmutableInsert() {
         try {
-            int idx = safe_stoi(immutableIndexEntry.get_text(), "индекс");
+            int idx = safe_stoi(immutableIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(immutableValueEntry.get_text(), "значение");
             model.immutableInsertAt(idx, val);
             appendImmutableOutputParts("Immutable Вставить ", val, " в ", idx);
             appendImmutableOutputParts("  Было: ", model.immutableToString());
             appendImmutableOutputParts("  Стало: ", model.immutableToString());
-            immutableIndexEntry.set_text(""); immutableValueEntry.set_text("");
+            immutableIndexEntry.set_text("");
+            immutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
     }
 
-    
     void onBitSet() {
         try {
-            int idx = safe_stoi(bitIndexEntry.get_text(), "индекс");
+            int idx = safe_stoi(bitIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(bitValueEntry.get_text(), "бит");
             model.bitSet(idx, val==1);
             appendBitOutputParts("BitSequence1: ", model.bitToString());
-            bitIndexEntry.set_text(""); bitValueEntry.set_text("");
+            bitIndexEntry.set_text("");
+            bitValueEntry.set_text("");
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
+
     void onBitAnd() {
         try {
-            int sz = safe_stoi(bitSizeEntry.get_text(), "размер");
+            int sz = safe_stoi(bitSizeEntry.get_text(), "размер", false);
             model.bitAndWithSize(sz);
             appendBitOutputParts("BitSequence1 И BitSequence2: ", model.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
+
     void onBitOr() {
         try {
-            int sz = safe_stoi(bitSizeEntry.get_text(), "размер");
+            int sz = safe_stoi(bitSizeEntry.get_text(), "размер", false);
             model.bitOrWithSize(sz);
             appendBitOutputParts("BitSequence1 ИЛИ BitSequence2: ", model.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
+
     void onBitXor() {
         try {
-            int sz = safe_stoi(bitSizeEntry.get_text(), "размер");
+            int sz = safe_stoi(bitSizeEntry.get_text(), "размер", false);
             model.bitXorWithSize(sz);
             appendBitOutputParts("BitSequence1 ИСКЛЮЧАЮЩЕЕ ИЛИ BitSequence2: ", model.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
+
     void onBitNot() {
         try {
             model.bitNot();
@@ -466,12 +490,36 @@ private:
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
 
-    
-    void onMap() { try { appendFuncOutput(model.mapSeq1()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
-    void onWhere() { try { appendFuncOutput(model.whereSeq1()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
-    void onReduce() { try { appendFuncOutput(model.reduceSeq1()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
-    void onZip() { try { appendFuncOutput(model.zipSeq1Seq2()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
-    void onSplit() { try { appendFuncOutput(model.splitSeq1()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
+    void onMap() {
+        try {
+            appendFuncOutput(model.mapSeq1());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void onWhere() {
+        try {
+            appendFuncOutput(model.whereSeq1());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void onReduce() {
+        try {
+            appendFuncOutput(model.reduceSeq1());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void onZip() {
+        try {
+            appendFuncOutput(model.zipSeq1Seq2());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void onSplit() {
+        try {
+            appendFuncOutput(model.splitSeq1());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
     void onSeq1Add() {
         try {
             std::string inp = seq1Entry.get_text();
@@ -480,7 +528,10 @@ private:
             DynamicArray<int> vals;
             bool tooBig = false;
             while (ss >> num) {
-                if (num > 40000 || num < -40000) { tooBig = true; break; }
+                if (num > 40000 || num < -40000) {
+                    tooBig = true;
+                    break;
+                }
                 vals.Append(num);
             }
             if (tooBig) {
@@ -495,7 +546,14 @@ private:
             seq1Entry.set_text("");
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-    void onSeq1Clear() { try { model.clearSeq1(); appendFuncOutputParts("Seq1 очищена"); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
+
+    void onSeq1Clear() {
+        try {
+            model.clearSeq1();
+            appendFuncOutputParts("Seq1 очищена");
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
     void onSeq2Add() {
         try {
             std::string inp = seq2Entry.get_text();
@@ -504,7 +562,10 @@ private:
             DynamicArray<int> vals;
             bool tooBig = false;
             while (ss >> num) {
-                if (num > 40000 || num < -40000) { tooBig = true; break; }
+                if (num > 40000 || num < -40000) {
+                    tooBig = true;
+                    break;
+                }
                 vals.Append(num);
             }
             if (tooBig) {
@@ -519,11 +580,26 @@ private:
             seq2Entry.set_text("");
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-    void onSeq2Clear() { try { model.clearSeq2(); appendFuncOutputParts("Seq2 очищена"); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
-    void onDemoIterators() { try { appendFuncOutput(model.demoIterators()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
-    void onUnzip() { try { appendFuncOutput(model.unzipSeq1Seq2()); } catch (const std::exception& e) { appendFuncOutput(e.what()); } }
 
-    
+    void onSeq2Clear() {
+        try {
+            model.clearSeq2();
+            appendFuncOutputParts("Seq2 очищена");
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void onDemoIterators() {
+        try {
+            appendFuncOutput(model.demoIterators());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
+    void onUnzip() {
+        try {
+            appendFuncOutput(model.unzipSeq1Seq2());
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+
     void rebuildMatrixInputGrid() {
         for (size_t i = 0; i < matrixEntries.GetSize(); ++i)
             for (size_t j = 0; j < matrixEntries.Get(i).GetSize(); ++j)
@@ -550,7 +626,8 @@ private:
     void printMatrix() {
         int n = model.matrixSize();
         for (int i = 0; i < n; ++i) {
-            std::stringstream ss; ss << "[";
+            std::stringstream ss;
+            ss << "[";
             for (int j = 0; j < n; ++j) {
                 ss << model.matrixGet(i, j);
                 if (j < n-1) ss << ", ";
@@ -562,7 +639,7 @@ private:
 
     void onMatrixCreate() {
         try {
-            int n = safe_stoi(matrixSizeEntry.get_text(), "размер матрицы");
+            int n = safe_stoi(matrixSizeEntry.get_text(), "размер матрицы", false);
             if (n <= 0) throw InvalidArgumentError("Размер матрицы должен быть положительным");
             model.matrixCreate(n);
             rebuildMatrixInputGrid();
@@ -570,9 +647,13 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixInit() {
         try {
-            if (model.matrixSize() == 0) { appendMatrixOutputLine("Сначала создайте матрицу"); return; }
+            if (model.matrixSize() == 0) {
+                appendMatrixOutputLine("Сначала создайте матрицу");
+                return;
+            }
             std::string inp = matrixInitEntry.get_text();
             model.matrixInitFromString(inp);
             rebuildMatrixInputGrid();
@@ -581,15 +662,20 @@ private:
             matrixInitEntry.set_text("");
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixAdd() {
         try {
             int n = model.matrixSize();
-            if (n == 0) { appendMatrixOutputLine("Сначала создайте матрицу"); return; }
+            if (n == 0) {
+                appendMatrixOutputLine("Сначала создайте матрицу");
+                return;
+            }
             DynamicArray<DynamicArray<double>> uiValues;
             for (int i = 0; i < n; ++i) {
                 DynamicArray<double> row;
                 for (int j = 0; j < n; ++j) {
-                    double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(), "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
+                    double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(),
+                        "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
                     row.Append(val);
                 }
                 uiValues.Append(row);
@@ -600,6 +686,7 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixScalar() {
         try {
             double s = safe_stod(scalarEntry.get_text(), "скаляр");
@@ -609,20 +696,27 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-    void onMatrixNorm() { try { appendParts("Норма матрицы: ", model.matrixNorm()); } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); } }
+
+    void onMatrixNorm() {
+        try {
+            appendParts("Норма матрицы: ", model.matrixNorm());
+        } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
+    }
+
     void onMatrixSwapRows() {
         try {
-            int i = safe_stoi(rowIndexEntry.get_text(), "первая строка");
-            int j = safe_stoi(targetEntry.get_text(), "вторая строка");
+            int i = safe_stoi(rowIndexEntry.get_text(), "первая строка", false);
+            int j = safe_stoi(targetEntry.get_text(), "вторая строка", false);
             model.matrixSwapRows(i, j);
             rebuildMatrixInputGrid();
             appendParts("Строки ", i, " и ", j, " поменяны местами");
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixMultiplyRow() {
         try {
-            int i = safe_stoi(rowIndexEntry.get_text(), "индекс строки");
+            int i = safe_stoi(rowIndexEntry.get_text(), "индекс строки", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
             model.matrixMultiplyRow(i, f);
             rebuildMatrixInputGrid();
@@ -630,10 +724,11 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixAddRow() {
         try {
-            int t = safe_stoi(targetEntry.get_text(), "строка-получатель");
-            int s = safe_stoi(sourceEntry.get_text(), "строка-источник");
+            int t = safe_stoi(targetEntry.get_text(), "строка-получатель", false);
+            int s = safe_stoi(sourceEntry.get_text(), "строка-источник", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
             model.matrixAddRow(t, s, f);
             rebuildMatrixInputGrid();
@@ -641,19 +736,21 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixSwapCols() {
         try {
-            int i = safe_stoi(rowIndexEntry.get_text(), "первый столбец");
-            int j = safe_stoi(targetEntry.get_text(), "второй столбец");
+            int i = safe_stoi(rowIndexEntry.get_text(), "первый столбец", false);
+            int j = safe_stoi(targetEntry.get_text(), "второй столбец", false);
             model.matrixSwapCols(i, j);
             rebuildMatrixInputGrid();
             appendParts("Столбцы ", i, " и ", j, " поменяны местами");
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixMultiplyCol() {
         try {
-            int j = safe_stoi(rowIndexEntry.get_text(), "индекс столбца");
+            int j = safe_stoi(rowIndexEntry.get_text(), "индекс столбца", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
             model.matrixMultiplyCol(j, f);
             rebuildMatrixInputGrid();
@@ -661,10 +758,11 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixAddCol() {
         try {
-            int t = safe_stoi(targetEntry.get_text(), "столбец-получатель");
-            int s = safe_stoi(sourceEntry.get_text(), "столбец-источник");
+            int t = safe_stoi(targetEntry.get_text(), "столбец-получатель", false);
+            int s = safe_stoi(sourceEntry.get_text(), "столбец-источник", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
             model.matrixAddCol(t, s, f);
             rebuildMatrixInputGrid();
@@ -672,15 +770,20 @@ private:
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
+
     void onMatrixMultiply() {
         try {
             int n = model.matrixSize();
-            if (n == 0) { appendMatrixOutputLine("Сначала создайте матрицу"); return; }
+            if (n == 0) {
+                appendMatrixOutputLine("Сначала создайте матрицу");
+                return;
+            }
             DynamicArray<DynamicArray<double>> uiValues;
             for (int i = 0; i < n; ++i) {
                 DynamicArray<double> row;
                 for (int j = 0; j < n; ++j) {
-                    double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(), "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
+                    double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(),
+                        "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
                     row.Append(val);
                 }
                 uiValues.Append(row);
@@ -692,7 +795,6 @@ private:
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
 
-    
     void rebuildComplexMatrixInputGrid() {
         for (size_t i = 0; i < complexMatrixCells.GetSize(); ++i)
             for (size_t j = 0; j < complexMatrixCells.Get(i).GetSize(); ++j)
@@ -728,7 +830,8 @@ private:
     void printComplexMatrix() {
         int n = model.complexMatrixSize();
         for (int i = 0; i < n; ++i) {
-            std::stringstream ss; ss << "[";
+            std::stringstream ss;
+            ss << "[";
             for (int j = 0; j < n; ++j) {
                 ss << model.complexMatrixGet(i, j).to_string();
                 if (j < n-1) ss << ", ";
@@ -740,7 +843,7 @@ private:
 
     void onComplexMatrixCreate() {
         try {
-            int n = safe_stoi(complexMatrixSizeEntry.get_text(), "размер матрицы");
+            int n = safe_stoi(complexMatrixSizeEntry.get_text(), "размер матрицы", false);
             if (n <= 0) throw InvalidArgumentError("Размер матрицы должен быть положительным");
             model.complexMatrixCreate(n);
             rebuildComplexMatrixInputGrid();
@@ -748,9 +851,13 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixInit() {
         try {
-            if (model.complexMatrixSize() == 0) { appendComplexMatrixOutputLine("Сначала создайте матрицу"); return; }
+            if (model.complexMatrixSize() == 0) {
+                appendComplexMatrixOutputLine("Сначала создайте матрицу");
+                return;
+            }
             std::string reStr = complexMatrixInitReEntry.get_text();
             std::string imStr = complexMatrixInitImEntry.get_text();
             model.complexMatrixInitFromString(reStr, imStr);
@@ -761,10 +868,14 @@ private:
             complexMatrixInitImEntry.set_text("");
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixAdd() {
         try {
             int n = model.complexMatrixSize();
-            if (n == 0) { appendComplexMatrixOutputLine("Сначала создайте матрицу"); return; }
+            if (n == 0) {
+                appendComplexMatrixOutputLine("Сначала создайте матрицу");
+                return;
+            }
             DynamicArray<DynamicArray<std::pair<double, double>>> uiValues;
             for (int i = 0; i < n; ++i) {
                 DynamicArray<std::pair<double, double>> row;
@@ -784,6 +895,7 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixScalar() {
         try {
             double s = safe_stod(complexScalarEntry.get_text(), "скаляр");
@@ -793,20 +905,27 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-    void onComplexMatrixNorm() { try { appendParts("Норма комплексной матрицы: ", model.complexMatrixNorm()); } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); } }
+
+    void onComplexMatrixNorm() {
+        try {
+            appendParts("Норма комплексной матрицы: ", model.complexMatrixNorm());
+        } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
+    }
+
     void onComplexMatrixSwapRows() {
         try {
-            int i = safe_stoi(complexRowIndexEntry.get_text(), "первая строка");
-            int j = safe_stoi(complexTargetEntry.get_text(), "вторая строка");
+            int i = safe_stoi(complexRowIndexEntry.get_text(), "первая строка", false);
+            int j = safe_stoi(complexTargetEntry.get_text(), "вторая строка", false);
             model.complexMatrixSwapRows(i, j);
             rebuildComplexMatrixInputGrid();
             appendParts("Строки ", i, " и ", j, " поменяны местами");
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixMultiplyRow() {
         try {
-            int i = safe_stoi(complexRowIndexEntry.get_text(), "индекс строки");
+            int i = safe_stoi(complexRowIndexEntry.get_text(), "индекс строки", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
             model.complexMatrixMultiplyRow(i, f);
             rebuildComplexMatrixInputGrid();
@@ -814,10 +933,11 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixAddRow() {
         try {
-            int t = safe_stoi(complexTargetEntry.get_text(), "строка-получатель");
-            int s = safe_stoi(complexSourceEntry.get_text(), "строка-источник");
+            int t = safe_stoi(complexTargetEntry.get_text(), "строка-получатель", false);
+            int s = safe_stoi(complexSourceEntry.get_text(), "строка-источник", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
             model.complexMatrixAddRow(t, s, f);
             rebuildComplexMatrixInputGrid();
@@ -825,19 +945,21 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixSwapCols() {
         try {
-            int i = safe_stoi(complexRowIndexEntry.get_text(), "первый столбец");
-            int j = safe_stoi(complexTargetEntry.get_text(), "второй столбец");
+            int i = safe_stoi(complexRowIndexEntry.get_text(), "первый столбец", false);
+            int j = safe_stoi(complexTargetEntry.get_text(), "второй столбец", false);
             model.complexMatrixSwapCols(i, j);
             rebuildComplexMatrixInputGrid();
             appendParts("Столбцы ", i, " и ", j, " поменяны местами");
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixMultiplyCol() {
         try {
-            int j = safe_stoi(complexRowIndexEntry.get_text(), "индекс столбца");
+            int j = safe_stoi(complexRowIndexEntry.get_text(), "индекс столбца", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
             model.complexMatrixMultiplyCol(j, f);
             rebuildComplexMatrixInputGrid();
@@ -845,10 +967,11 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixAddCol() {
         try {
-            int t = safe_stoi(complexTargetEntry.get_text(), "столбец-получатель");
-            int s = safe_stoi(complexSourceEntry.get_text(), "столбец-источник");
+            int t = safe_stoi(complexTargetEntry.get_text(), "столбец-получатель", false);
+            int s = safe_stoi(complexSourceEntry.get_text(), "столбец-источник", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
             model.complexMatrixAddCol(t, s, f);
             rebuildComplexMatrixInputGrid();
@@ -856,10 +979,14 @@ private:
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
+
     void onComplexMatrixMultiply() {
         try {
             int n = model.complexMatrixSize();
-            if (n == 0) { appendComplexMatrixOutputLine("Сначала создайте матрицу"); return; }
+            if (n == 0) {
+                appendComplexMatrixOutputLine("Сначала создайте матрицу");
+                return;
+            }
             DynamicArray<DynamicArray<std::pair<double, double>>> uiValues;
             for (int i = 0; i < n; ++i) {
                 DynamicArray<std::pair<double, double>> row;
@@ -891,8 +1018,8 @@ public:
         mutableTopBox(Gtk::ORIENTATION_VERTICAL, 10), mutableBottomBox(Gtk::ORIENTATION_VERTICAL, 10),
         immutableTopBox(Gtk::ORIENTATION_VERTICAL, 10), immutableBottomBox(Gtk::ORIENTATION_VERTICAL, 10),
         bitTopBox(Gtk::ORIENTATION_VERTICAL, 10), bitBottomBox(Gtk::ORIENTATION_VERTICAL, 10),
-        funcBox(Gtk::ORIENTATION_VERTICAL, 10), seq1Box(Gtk::ORIENTATION_HORIZONTAL, 5), seq2Box(Gtk::ORIENTATION_HORIZONTAL, 5),
-        funcButtonsBox(Gtk::ORIENTATION_HORIZONTAL, 5),
+        funcBox(Gtk::ORIENTATION_VERTICAL, 10), seq1Box(Gtk::ORIENTATION_HORIZONTAL, 5),
+        seq2Box(Gtk::ORIENTATION_HORIZONTAL, 5), funcButtonsBox(Gtk::ORIENTATION_HORIZONTAL, 5),
         arrayAppendButton("Добавить в конец"), arrayPrependButton("Добавить в начало"),
         arrayInsertButton("Вставить"), arrayGetButton("Получить"),
         arrayConcatButton("Склеить"), arraySubseqButton("Подпоследовательность"), arrayClearButton("Очистить"),
@@ -932,15 +1059,17 @@ public:
         set_default_size(1200, 800);
         srand(time(nullptr));
         add(mainBox);
-        notebook.set_hexpand(true); notebook.set_vexpand(true);
+        notebook.set_hexpand(true);
+        notebook.set_vexpand(true);
         mainBox.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET, 5);
 
-        
         arrayBuffer = Gtk::TextBuffer::create();
-        arrayOutput.set_buffer(arrayBuffer); arrayOutput.set_editable(false);
+        arrayOutput.set_buffer(arrayBuffer);
+        arrayOutput.set_editable(false);
         arrayScroll.add(arrayOutput);
         arrayScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        arrayScroll.set_hexpand(true); arrayScroll.set_vexpand(true);
+        arrayScroll.set_hexpand(true);
+        arrayScroll.set_vexpand(true);
         arrayTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
         arrayTopBox.pack_start(arrayValueEntry, Gtk::PACK_SHRINK, 5);
         arrayTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
@@ -957,12 +1086,13 @@ public:
         arrayPage.pack_start(arrayBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(arrayPage, "ArraySequence");
 
-        
         listBuffer = Gtk::TextBuffer::create();
-        listOutput.set_buffer(listBuffer); listOutput.set_editable(false);
+        listOutput.set_buffer(listBuffer);
+        listOutput.set_editable(false);
         listScroll.add(listOutput);
         listScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        listScroll.set_hexpand(true); listScroll.set_vexpand(true);
+        listScroll.set_hexpand(true);
+        listScroll.set_vexpand(true);
         listTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
         listTopBox.pack_start(listValueEntry, Gtk::PACK_SHRINK, 5);
         listTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
@@ -979,12 +1109,13 @@ public:
         listPage.pack_start(listBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(listPage, "ListSequence");
 
-        
         mutableBuffer = Gtk::TextBuffer::create();
-        mutableOutput.set_buffer(mutableBuffer); mutableOutput.set_editable(false);
+        mutableOutput.set_buffer(mutableBuffer);
+        mutableOutput.set_editable(false);
         mutableScroll.add(mutableOutput);
         mutableScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        mutableScroll.set_hexpand(true); mutableScroll.set_vexpand(true);
+        mutableScroll.set_hexpand(true);
+        mutableScroll.set_vexpand(true);
         mutableTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
         mutableTopBox.pack_start(mutableValueEntry, Gtk::PACK_SHRINK, 5);
         mutableBottomBox.pack_start(mutableAppendButton, Gtk::PACK_SHRINK, 5);
@@ -995,12 +1126,13 @@ public:
         mutablePage.pack_start(mutableBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(mutablePage, "MutableArraySequence");
 
-        
         immutableBuffer = Gtk::TextBuffer::create();
-        immutableOutput.set_buffer(immutableBuffer); immutableOutput.set_editable(false);
+        immutableOutput.set_buffer(immutableBuffer);
+        immutableOutput.set_editable(false);
         immutableScroll.add(immutableOutput);
         immutableScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        immutableScroll.set_hexpand(true); immutableScroll.set_vexpand(true);
+        immutableScroll.set_hexpand(true);
+        immutableScroll.set_vexpand(true);
         immutableTopBox.pack_start(*makeLabel("Значение:"), Gtk::PACK_SHRINK, 5);
         immutableTopBox.pack_start(immutableValueEntry, Gtk::PACK_SHRINK, 5);
         immutableTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
@@ -1013,12 +1145,13 @@ public:
         immutablePage.pack_start(immutableBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(immutablePage, "ImmutableArraySequence");
 
-        
         bitBuffer = Gtk::TextBuffer::create();
-        bitOutput.set_buffer(bitBuffer); bitOutput.set_editable(false);
+        bitOutput.set_buffer(bitBuffer);
+        bitOutput.set_editable(false);
         bitScroll.add(bitOutput);
         bitScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        bitScroll.set_hexpand(true); bitScroll.set_vexpand(true);
+        bitScroll.set_hexpand(true);
+        bitScroll.set_vexpand(true);
         bitTopBox.pack_start(*makeLabel("Индекс:"), Gtk::PACK_SHRINK, 5);
         bitTopBox.pack_start(bitIndexEntry, Gtk::PACK_SHRINK, 5);
         bitTopBox.pack_start(*makeLabel("Бит (0/1):"), Gtk::PACK_SHRINK, 5);
@@ -1035,12 +1168,13 @@ public:
         bitPage.pack_start(bitBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(bitPage, "BitSequence");
 
-        
         funcBuffer = Gtk::TextBuffer::create();
-        funcOutput.set_buffer(funcBuffer); funcOutput.set_editable(false);
+        funcOutput.set_buffer(funcBuffer);
+        funcOutput.set_editable(false);
         funcScroll.add(funcOutput);
         funcScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        funcScroll.set_hexpand(true); funcScroll.set_vexpand(true);
+        funcScroll.set_hexpand(true);
+        funcScroll.set_vexpand(true);
         seq1Box.pack_start(*makeLabel("Seq1:"), Gtk::PACK_SHRINK, 5);
         seq1Box.pack_start(seq1Entry, Gtk::PACK_EXPAND_WIDGET, 5);
         seq1Box.pack_start(seq1AddButton, Gtk::PACK_SHRINK, 5);
@@ -1063,21 +1197,13 @@ public:
         funcPage.pack_start(funcBox, Gtk::PACK_EXPAND_WIDGET, 5);
         notebook.append_page(funcPage, "Map/Reduce");
 
-        
         squareMatrixBuffer = Gtk::TextBuffer::create();
         squareMatrixOutput.set_buffer(squareMatrixBuffer);
         squareMatrixOutput.set_editable(false);
         squareMatrixScroll.add(squareMatrixOutput);
         squareMatrixScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        squareMatrixScroll.set_hexpand(true); squareMatrixScroll.set_vexpand(true);
-
-        matrixSizeEntry.set_hexpand(false); matrixSizeEntry.set_vexpand(false); matrixSizeEntry.set_width_chars(5);
-        scalarEntry.set_hexpand(false); scalarEntry.set_vexpand(false); scalarEntry.set_width_chars(10);
-        rowIndexEntry.set_hexpand(false); rowIndexEntry.set_vexpand(false); rowIndexEntry.set_width_chars(5);
-        targetEntry.set_hexpand(false); targetEntry.set_vexpand(false); targetEntry.set_width_chars(5);
-        sourceEntry.set_hexpand(false); sourceEntry.set_vexpand(false); sourceEntry.set_width_chars(5);
-        factorEntry.set_hexpand(false); factorEntry.set_vexpand(false); factorEntry.set_width_chars(10);
-        matrixInitEntry.set_hexpand(true); matrixInitEntry.set_vexpand(false); matrixInitEntry.set_width_chars(30);
+        squareMatrixScroll.set_hexpand(true);
+        squareMatrixScroll.set_vexpand(true);
 
         squareMatrixTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK, 5);
         squareMatrixTopBox.pack_start(matrixSizeEntry, Gtk::PACK_SHRINK, 5);
@@ -1113,22 +1239,15 @@ public:
         squareMatrixPage.pack_start(squareMatrixBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(squareMatrixPage, "SquareMatrix");
 
-        
         complexMatrixBuffer = Gtk::TextBuffer::create();
         complexMatrixOutput.set_buffer(complexMatrixBuffer);
         complexMatrixOutput.set_editable(false);
         complexMatrixScroll.add(complexMatrixOutput);
         complexMatrixScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
-        complexMatrixScroll.set_hexpand(true); complexMatrixScroll.set_vexpand(true);
+        complexMatrixScroll.set_hexpand(true);
+        complexMatrixScroll.set_vexpand(true);
 
-        complexMatrixSizeEntry.set_hexpand(false); complexMatrixSizeEntry.set_vexpand(false); complexMatrixSizeEntry.set_width_chars(5);
-        complexScalarEntry.set_hexpand(false); complexScalarEntry.set_vexpand(false); complexScalarEntry.set_width_chars(10);
-        complexRowIndexEntry.set_hexpand(false); complexRowIndexEntry.set_vexpand(false); complexRowIndexEntry.set_width_chars(5);
-        complexTargetEntry.set_hexpand(false); complexTargetEntry.set_vexpand(false); complexTargetEntry.set_width_chars(5);
-        complexSourceEntry.set_hexpand(false); complexSourceEntry.set_vexpand(false); complexSourceEntry.set_width_chars(5);
-        complexFactorEntry.set_hexpand(false); complexFactorEntry.set_vexpand(false); complexFactorEntry.set_width_chars(10);
-        complexMatrixInitReEntry.set_hexpand(true); complexMatrixInitReEntry.set_vexpand(false); complexMatrixInitReEntry.set_width_chars(30);
-        complexMatrixInitImEntry.set_hexpand(true); complexMatrixInitImEntry.set_vexpand(false); complexMatrixInitImEntry.set_width_chars(30);
+
 
         complexMatrixTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK, 5);
         complexMatrixTopBox.pack_start(complexMatrixSizeEntry, Gtk::PACK_SHRINK, 5);
@@ -1166,7 +1285,6 @@ public:
         complexMatrixPage.pack_start(complexMatrixBottomBox, Gtk::PACK_SHRINK, 5);
         notebook.append_page(complexMatrixPage, "Complex Matrix");
 
-        
         arrayAppendButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayAppend));
         arrayPrependButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayPrepend));
         arrayInsertButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onArrayInsert));
