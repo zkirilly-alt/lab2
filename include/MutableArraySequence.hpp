@@ -10,6 +10,10 @@ public:
     MutableArraySequence(const MutableArraySequence<T>& other) : ArraySequence<T>(other) {}
     MutableArraySequence(MutableArraySequence&& other) noexcept : ArraySequence<T>(std::move(other)) {}
 
+    Sequence<T>* Clone() const override {
+        return new MutableArraySequence<T>(*this);
+    }
+
     MutableArraySequence<T>& operator=(const MutableArraySequence<T>& other) {
         if (this != &other) {
             ArraySequence<T>::operator=(other);

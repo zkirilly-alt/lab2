@@ -29,6 +29,10 @@ public:
     BitSequence& operator=(const BitSequence& other);
     BitSequence& operator=(BitSequence&& other) noexcept;
 
+    Sequence<bool>* Clone() const override {
+        return new BitSequence(*this);
+    }
+
     bool GetFirst() const override;
     bool GetLast() const override;
     bool Get(int index) const override;

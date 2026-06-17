@@ -24,16 +24,95 @@ std::string ApplicationModel::boolSequenceToString(const Sequence<bool>* seq) co
     return oss.str();
 }
 
-ApplicationModel::ApplicationModel()
-    : arraySeq(new MutableArraySequence<int>())
-    , listSeq(new ListSequence<int>())
-    , mutableSeq(new MutableArraySequence<int>())
-    , immutableSeq(new ImmutableArraySequence<int>(new int[5]{10,20,30,40,50}, 5))
-    , bitSeq1(new BitSequence())
-    , seq1(new ArraySequence<int>())
-    , seq2(new ArraySequence<int>())
-    , currentMatrix(0)
+
+ApplicationModel::ApplicationModel(const ApplicationModel& other)
+    : arraySeq(other.arraySeq ? other.arraySeq->Clone() : nullptr)
+    , listSeq(other.listSeq ? other.listSeq->Clone() : nullptr)
+    , mutableSeq(other.mutableSeq ? other.mutableSeq->Clone() : nullptr)
+    , immutableSeq(other.immutableSeq ? other.immutableSeq->Clone() : nullptr)
+    , bitSeq1(other.bitSeq1 ? other.bitSeq1->Clone() : nullptr)
+    , seq1(other.seq1 ? other.seq1->Clone() : nullptr)
+    , seq2(other.seq2 ? other.seq2->Clone() : nullptr)
+    , currentMatrix(other.currentMatrix)
 {}
+
+
+ApplicationModel& ApplicationModel::operator=(const ApplicationModel& other) {
+    if (this != &other) {
+        
+        delete arraySeq;
+        delete listSeq;
+        delete mutableSeq;
+        delete immutableSeq;
+        delete bitSeq1;
+        delete seq1;
+        delete seq2;
+        
+        
+        arraySeq = other.arraySeq ? other.arraySeq->Clone() : nullptr;
+        listSeq = other.listSeq ? other.listSeq->Clone() : nullptr;
+        mutableSeq = other.mutableSeq ? other.mutableSeq->Clone() : nullptr;
+        immutableSeq = other.immutableSeq ? other.immutableSeq->Clone() : nullptr;
+        bitSeq1 = other.bitSeq1 ? other.bitSeq1->Clone() : nullptr;
+        seq1 = other.seq1 ? other.seq1->Clone() : nullptr;
+        seq2 = other.seq2 ? other.seq2->Clone() : nullptr;
+        currentMatrix = other.currentMatrix;
+    }
+    return *this;
+}
+
+
+ApplicationModel::ApplicationModel(ApplicationModel&& other) noexcept
+    : arraySeq(other.arraySeq)
+    , listSeq(other.listSeq)
+    , mutableSeq(other.mutableSeq)
+    , immutableSeq(other.immutableSeq)
+    , bitSeq1(other.bitSeq1)
+    , seq1(other.seq1)
+    , seq2(other.seq2)
+    , currentMatrix(std::move(other.currentMatrix))
+{
+    other.arraySeq = nullptr;
+    other.listSeq = nullptr;
+    other.mutableSeq = nullptr;
+    other.immutableSeq = nullptr;
+    other.bitSeq1 = nullptr;
+    other.seq1 = nullptr;
+    other.seq2 = nullptr;
+}
+
+
+ApplicationModel& ApplicationModel::operator=(ApplicationModel&& other) noexcept {
+    if (this != &other) {
+        
+        delete arraySeq;
+        delete listSeq;
+        delete mutableSeq;
+        delete immutableSeq;
+        delete bitSeq1;
+        delete seq1;
+        delete seq2;
+        
+        
+        arraySeq = other.arraySeq;
+        listSeq = other.listSeq;
+        mutableSeq = other.mutableSeq;
+        immutableSeq = other.immutableSeq;
+        bitSeq1 = other.bitSeq1;
+        seq1 = other.seq1;
+        seq2 = other.seq2;
+        currentMatrix = std::move(other.currentMatrix);
+        
+        other.arraySeq = nullptr;
+        other.listSeq = nullptr;
+        other.mutableSeq = nullptr;
+        other.immutableSeq = nullptr;
+        other.bitSeq1 = nullptr;
+        other.seq1 = nullptr;
+        other.seq2 = nullptr;
+    }
+    return *this;
+}
 
 ApplicationModel::~ApplicationModel() {
     delete arraySeq;

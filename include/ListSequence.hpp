@@ -20,6 +20,10 @@ public:
     ListSequence(const ListSequence<T>& other) : items(other.items) {}
     ListSequence(ListSequence&& other) noexcept : items(std::move(other.items)) {}
 
+    Sequence<T>* Clone() const override {
+        return new ListSequence<T>(*this);
+    }
+
     ListSequence<T>& operator=(const ListSequence<T>& other) {
         if (this != &other) items = other.items;
         return *this;

@@ -15,6 +15,10 @@
 class ApplicationModel {
 public:
     ApplicationModel();
+    ApplicationModel(const ApplicationModel& other);   
+    ApplicationModel& operator=(const ApplicationModel& other); 
+    ApplicationModel(ApplicationModel&& other) noexcept; 
+    ApplicationModel& operator=(ApplicationModel&& other) noexcept; 
     ~ApplicationModel();
 
     void arrayAppend(int value);

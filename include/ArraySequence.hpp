@@ -20,6 +20,11 @@ public:
     ArraySequence(const ArraySequence<T>& other) : items(other.items) {}
     ArraySequence(ArraySequence&& other) noexcept : items(std::move(other.items)) {}
 
+
+    Sequence<T>* Clone() const override {
+        return new ArraySequence<T>(*this);
+    }
+
     ArraySequence<T>& operator=(const ArraySequence<T>& other) {
         if (this != &other) items = other.items;
         return *this;
