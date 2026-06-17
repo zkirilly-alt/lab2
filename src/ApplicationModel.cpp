@@ -23,6 +23,16 @@ std::string ApplicationModel::boolSequenceToString(const Sequence<bool>* seq) co
         oss << (seq->Get(i) ? "1" : "0");
     return oss.str();
 }
+ApplicationModel::ApplicationModel()
+    : arraySeq(new MutableArraySequence<int>())
+    , listSeq(new ListSequence<int>())
+    , mutableSeq(new MutableArraySequence<int>())
+    , immutableSeq(new ImmutableArraySequence<int>(new int[5]{10,20,30,40,50}, 5))
+    , bitSeq1(new BitSequence())
+    , seq1(new ArraySequence<int>())
+    , seq2(new ArraySequence<int>())
+    , currentMatrix(0)
+{}
 
 
 ApplicationModel::ApplicationModel(const ApplicationModel& other)
