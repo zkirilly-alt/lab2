@@ -7,9 +7,6 @@
 
 class ComplexMatrixRepository {
 public:
-    ComplexMatrixRepository() = default;
-    ~ComplexMatrixRepository() = default;
-
     void create(int size);
     void initFromStrings(const std::string& reValues, const std::string& imValues);
     void set(int row, int col, const Complex& value);
