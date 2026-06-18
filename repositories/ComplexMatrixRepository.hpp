@@ -10,11 +10,6 @@ public:
     ComplexMatrixRepository() = default;
     ~ComplexMatrixRepository() = default;
 
-    ComplexMatrixRepository(const ComplexMatrixRepository&) = delete;
-    ComplexMatrixRepository& operator=(const ComplexMatrixRepository&) = delete;
-    ComplexMatrixRepository(ComplexMatrixRepository&&) = delete;
-    ComplexMatrixRepository& operator=(ComplexMatrixRepository&&) = delete;
-
     void create(int size);
     void initFromStrings(const std::string& reValues, const std::string& imValues);
     void set(int row, int col, const Complex& value);

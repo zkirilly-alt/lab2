@@ -2,10 +2,10 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
-#include "SequenceRepository.hpp"
 #include "FunctionalEngine.hpp"
-#include "DoubleMatrixRepository.hpp"
-#include "ComplexMatrixRepository.hpp"
+#include "../repositories/ComplexMatrixRepository.hpp"
+#include "../repositories/DoubleMatrixRepository.hpp"
+#include "../repositories/SequenceRepository.hpp"
 #include "Exception.hpp"
 
 class MainWindow : public Gtk::Window {
