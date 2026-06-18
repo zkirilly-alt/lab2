@@ -2,12 +2,17 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
-#include "ApplicationModel.hpp"
+#include "SequenceRepository.hpp"
+#include "FunctionalEngine.hpp"
+#include "DoubleMatrixRepository.hpp"
+#include "ComplexMatrixRepository.hpp"
 #include "Exception.hpp"
 
 class MainWindow : public Gtk::Window {
 private:
-    ApplicationModel model;
+    SequenceRepository seqRepo;
+    DoubleMatrixRepository doubleMatrixRepo;
+    ComplexMatrixRepository complexMatrixRepo;
 
     Gtk::Box mainBox;
     Gtk::Notebook notebook;
@@ -63,6 +68,7 @@ private:
     Gtk::Button bitOrButton;
     Gtk::Button bitXorButton;
     Gtk::Button bitNotButton;
+    Gtk::Button bitClearButton;
 
     Gtk::Button mapButton;
     Gtk::Button whereButton;
@@ -109,7 +115,7 @@ private:
     Glib::RefPtr<Gtk::TextBuffer> immutableBuffer;
     Glib::RefPtr<Gtk::TextBuffer> bitBuffer;
     Glib::RefPtr<Gtk::TextBuffer> funcBuffer;
-
+    
     Gtk::Box squareMatrixPage;
     Gtk::Box squareMatrixTopBox;
     Gtk::Box squareMatrixBottomBox;
@@ -254,27 +260,25 @@ private:
     void onArrayAppend() {
         try {
             int value = safe_stoi(arrayValueEntry.get_text(), "значение");
-            model.arrayAppend(value);
-            appendArrayOutputParts("Добавить ", value, ": ", model.arrayToString());
+            seqRepo.arrayAppend(value);
+            appendArrayOutputParts("Добавить ", value, ": ", seqRepo.arrayToString());
             arrayValueEntry.set_text("");
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-
     void onArrayPrepend() {
         try {
             int value = safe_stoi(arrayValueEntry.get_text(), "значение");
-            model.arrayPrepend(value);
-            appendArrayOutputParts("Добавить в начало ", value, ": ", model.arrayToString());
+            seqRepo.arrayPrepend(value);
+            appendArrayOutputParts("Добавить в начало ", value, ": ", seqRepo.arrayToString());
             arrayValueEntry.set_text("");
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-
     void onArrayInsert() {
         try {
             int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(arrayValueEntry.get_text(), "значение");
-            model.arrayInsertAt(idx, val);
-            appendArrayOutputParts("Вставить ", val, " в ", idx, ": ", model.arrayToString());
+            seqRepo.arrayInsertAt(idx, val);
+            appendArrayOutputParts("Вставить ", val, " в ", idx, ": ", seqRepo.arrayToString());
             arrayIndexEntry.set_text("");
             arrayValueEntry.set_text("");
         } catch (const IndexOutOfRange& e) {
@@ -282,11 +286,10 @@ private:
             else appendArrayOutput(e.what());
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-
     void onArrayGet() {
         try {
             int idx = safe_stoi(arrayIndexEntry.get_text(), "индекс", false);
-            int val = model.arrayGet(idx);
+            int val = seqRepo.arrayGet(idx);
             appendArrayOutputParts("Получить[", idx, "] = ", val);
             arrayIndexEntry.set_text("");
         } catch (const IndexOutOfRange& e) {
@@ -294,54 +297,55 @@ private:
             else appendArrayOutput(e.what());
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-
     void onArrayConcat() {
         try {
-            model.arrayConcatWithDemo();
-            appendArrayOutputParts("Склеить с [100,200,300]: ", model.arrayToString());
+            Sequence<int>* seq = seqRepo.getArraySeq();
+            MutableArraySequence<int> tmp;
+            tmp.Append(100); tmp.Append(200); tmp.Append(300);
+            Sequence<int>* res = seq->Concat(tmp);
+            appendArrayOutputParts("Склеить с [100,200,300]: ", seqRepo.arrayToString());
+            delete res;
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-
     void onArraySubseq() {
         try {
             int start = safe_stoi(arrayIndexEntry.get_text(), "начальный индекс", false);
-            model.arraySubsequence(start);
-            appendArrayOutputParts("Подпоследовательность с ", start, ": ", model.arrayToString());
+            Sequence<int>* seq = seqRepo.getArraySeq();
+            Sequence<int>* sub = seq->GetSubsequence(start, seq->GetLength() - 1);
+            appendArrayOutputParts("Подпоследовательность с ", start, ": ", seqRepo.arrayToString());
+            delete sub;
             arrayIndexEntry.set_text("");
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
-
     void onArrayClear() {
         try {
-            model.arrayClear();
-            appendArrayOutputParts("Очистить: ", model.arrayToString());
+            seqRepo.arrayClear();
+            appendArrayOutputParts("Очистить: ", seqRepo.arrayToString());
         } catch (const std::exception& e) { appendArrayOutput(e.what()); }
     }
 
     void onListAppend() {
         try {
             int v = safe_stoi(listValueEntry.get_text(), "значение");
-            model.listAppend(v);
-            appendListOutputParts("Добавить ", v, ": ", model.listToString());
+            seqRepo.listAppend(v);
+            appendListOutputParts("Добавить ", v, ": ", seqRepo.listToString());
             listValueEntry.set_text("");
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-
     void onListPrepend() {
         try {
             int v = safe_stoi(listValueEntry.get_text(), "значение");
-            model.listPrepend(v);
-            appendListOutputParts("Добавить в начало ", v, ": ", model.listToString());
+            seqRepo.listPrepend(v);
+            appendListOutputParts("Добавить в начало ", v, ": ", seqRepo.listToString());
             listValueEntry.set_text("");
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-
     void onListInsert() {
         try {
             int idx = safe_stoi(listIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(listValueEntry.get_text(), "значение");
-            model.listInsertAt(idx, val);
-            appendListOutputParts("Вставить ", val, " в ", idx, ": ", model.listToString());
+            seqRepo.listInsertAt(idx, val);
+            appendListOutputParts("Вставить ", val, " в ", idx, ": ", seqRepo.listToString());
             listIndexEntry.set_text("");
             listValueEntry.set_text("");
         } catch (const IndexOutOfRange& e) {
@@ -349,11 +353,10 @@ private:
             else appendListOutput(e.what());
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-
     void onListGet() {
         try {
             int idx = safe_stoi(listIndexEntry.get_text(), "индекс", false);
-            int val = model.listGet(idx);
+            int val = seqRepo.listGet(idx);
             appendListOutputParts("Получить[", idx, "] = ", val);
             listIndexEntry.set_text("");
         } catch (const IndexOutOfRange& e) {
@@ -361,54 +364,55 @@ private:
             else appendListOutput(e.what());
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-
     void onListConcat() {
         try {
-            model.listConcatWithDemo();
-            appendListOutputParts("Склеить с [100,200,300]: ", model.listToString());
+            Sequence<int>* seq = seqRepo.getListSeq();
+            ListSequence<int> tmp;
+            tmp.Append(100); tmp.Append(200); tmp.Append(300);
+            Sequence<int>* res = seq->Concat(tmp);
+            appendListOutputParts("Склеить с [100,200,300]: ", seqRepo.listToString());
+            delete res;
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-
     void onListSubseq() {
         try {
             int start = safe_stoi(listIndexEntry.get_text(), "начальный индекс", false);
-            model.listSubsequence(start);
-            appendListOutputParts("Подпоследовательность с ", start, ": ", model.listToString());
+            Sequence<int>* seq = seqRepo.getListSeq();
+            Sequence<int>* sub = seq->GetSubsequence(start, seq->GetLength() - 1);
+            appendListOutputParts("Подпоследовательность с ", start, ": ", seqRepo.listToString());
+            delete sub;
             listIndexEntry.set_text("");
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
-
     void onListClear() {
         try {
-            model.listClear();
-            appendListOutputParts("Очистить: ", model.listToString());
+            seqRepo.listClear();
+            appendListOutputParts("Очистить: ", seqRepo.listToString());
         } catch (const std::exception& e) { appendListOutput(e.what()); }
     }
 
     void onMutableAppend() {
         try {
             int v = safe_stoi(mutableValueEntry.get_text(), "значение");
-            model.mutableAppend(v);
-            appendMutableOutputParts("Mutable Добавить ", v, ": ", model.mutableToString());
+            seqRepo.mutableAppend(v);
+            appendMutableOutputParts("Mutable Добавить ", v, ": ", seqRepo.mutableToString());
             mutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendMutableOutput(e.what()); }
     }
-
     void onMutablePrepend() {
         try {
             int v = safe_stoi(mutableValueEntry.get_text(), "значение");
-            model.mutablePrepend(v);
-            appendMutableOutputParts("Mutable Добавить в начало ", v, ": ", model.mutableToString());
+            seqRepo.mutablePrepend(v);
+            appendMutableOutputParts("Mutable Добавить в начало ", v, ": ", seqRepo.mutableToString());
             mutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendMutableOutput(e.what()); }
     }
-
     void onMutableInsert() {
         try {
             int idx = safe_stoi(mutableValueEntry.get_text(), "индекс", false);
             int val = safe_stoi(mutableValueEntry.get_text(), "значение");
-            model.mutableInsertAt(idx, val);
-            appendMutableOutputParts("Mutable Вставить ", val, " в ", idx, ": ", model.mutableToString());
+            seqRepo.mutableInsertAt(idx, val);
+            appendMutableOutputParts("Mutable Вставить ", val, " в ", idx, ": ", seqRepo.mutableToString());
             mutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendMutableOutput(e.what()); }
     }
@@ -416,33 +420,31 @@ private:
     void onImmutableAppend() {
         try {
             int v = safe_stoi(immutableValueEntry.get_text(), "значение");
-            model.immutableAppend(v);
+            seqRepo.immutableAppend(v);
             appendImmutableOutputParts("Immutable Добавить ", v);
-            appendImmutableOutputParts("  Было: ", model.immutableToString());
-            appendImmutableOutputParts("  Стало: ", model.immutableToString());
+            appendImmutableOutputParts("  Было: ", seqRepo.immutableToString());
+            appendImmutableOutputParts("  Стало: ", seqRepo.immutableToString());
             immutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
     }
-
     void onImmutablePrepend() {
         try {
             int v = safe_stoi(immutableValueEntry.get_text(), "значение");
-            model.immutablePrepend(v);
+            seqRepo.immutablePrepend(v);
             appendImmutableOutputParts("Immutable Добавить в начало ", v);
-            appendImmutableOutputParts("  Было: ", model.immutableToString());
-            appendImmutableOutputParts("  Стало: ", model.immutableToString());
+            appendImmutableOutputParts("  Было: ", seqRepo.immutableToString());
+            appendImmutableOutputParts("  Стало: ", seqRepo.immutableToString());
             immutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
     }
-
     void onImmutableInsert() {
         try {
             int idx = safe_stoi(immutableIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(immutableValueEntry.get_text(), "значение");
-            model.immutableInsertAt(idx, val);
+            seqRepo.immutableInsertAt(idx, val);
             appendImmutableOutputParts("Immutable Вставить ", val, " в ", idx);
-            appendImmutableOutputParts("  Было: ", model.immutableToString());
-            appendImmutableOutputParts("  Стало: ", model.immutableToString());
+            appendImmutableOutputParts("  Было: ", seqRepo.immutableToString());
+            appendImmutableOutputParts("  Стало: ", seqRepo.immutableToString());
             immutableIndexEntry.set_text("");
             immutableValueEntry.set_text("");
         } catch (const std::exception& e) { appendImmutableOutput(e.what()); }
@@ -452,71 +454,92 @@ private:
         try {
             int idx = safe_stoi(bitIndexEntry.get_text(), "индекс", false);
             int val = safe_stoi(bitValueEntry.get_text(), "бит");
-            model.bitSet(idx, val==1);
-            appendBitOutputParts("BitSequence1: ", model.bitToString());
+            seqRepo.bitSet(idx, val==1);
+            appendBitOutputParts("BitSequence1: ", seqRepo.bitToString());
             bitIndexEntry.set_text("");
             bitValueEntry.set_text("");
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
-
     void onBitAnd() {
         try {
             int sz = safe_stoi(bitSizeEntry.get_text(), "размер", false);
-            model.bitAndWithSize(sz);
-            appendBitOutputParts("BitSequence1 И BitSequence2: ", model.bitToString());
+            BitSequence seq2(sz);
+            Sequence<bool>* bitSeq = seqRepo.getBitSeq();
+            for (int i = 0; i < sz && i < bitSeq->GetLength(); ++i)
+                seq2.Set(i, bitSeq->Get(i));
+            BitSequence res = (*static_cast<BitSequence*>(bitSeq)) & seq2;
+            appendBitOutputParts("BitSequence1 И BitSequence2: ", seqRepo.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
-
     void onBitOr() {
         try {
             int sz = safe_stoi(bitSizeEntry.get_text(), "размер", false);
-            model.bitOrWithSize(sz);
-            appendBitOutputParts("BitSequence1 ИЛИ BitSequence2: ", model.bitToString());
+            BitSequence seq2(sz);
+            Sequence<bool>* bitSeq = seqRepo.getBitSeq();
+            for (int i = 0; i < sz && i < bitSeq->GetLength(); ++i)
+                seq2.Set(i, bitSeq->Get(i));
+            BitSequence res = (*static_cast<BitSequence*>(bitSeq)) | seq2;
+            appendBitOutputParts("BitSequence1 ИЛИ BitSequence2: ", seqRepo.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
-
     void onBitXor() {
         try {
             int sz = safe_stoi(bitSizeEntry.get_text(), "размер", false);
-            model.bitXorWithSize(sz);
-            appendBitOutputParts("BitSequence1 ИСКЛЮЧАЮЩЕЕ ИЛИ BitSequence2: ", model.bitToString());
+            BitSequence seq2(sz);
+            Sequence<bool>* bitSeq = seqRepo.getBitSeq();
+            for (int i = 0; i < sz && i < bitSeq->GetLength(); ++i)
+                seq2.Set(i, bitSeq->Get(i));
+            BitSequence res = (*static_cast<BitSequence*>(bitSeq)) ^ seq2;
+            appendBitOutputParts("BitSequence1 ИСКЛЮЧАЮЩЕЕ ИЛИ BitSequence2: ", seqRepo.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
-
     void onBitNot() {
         try {
-            model.bitNot();
-            appendBitOutputParts("НЕ BitSequence1: ", model.bitToString());
+            Sequence<bool>* bitSeq = seqRepo.getBitSeq();
+            BitSequence res = ~(*static_cast<BitSequence*>(bitSeq));
+            appendBitOutputParts("НЕ BitSequence1: ", seqRepo.bitToString());
+        } catch (const std::exception& e) { appendBitOutput(e.what()); }
+    }
+    void onBitClear() {
+        try {
+            seqRepo.bitClear();
+            appendBitOutputParts("BitSequence очищена: ", seqRepo.bitToString());
         } catch (const std::exception& e) { appendBitOutput(e.what()); }
     }
 
     void onMap() {
         try {
-            appendFuncOutput(model.mapSeq1());
+            appendFuncOutput(FunctionalEngine::mapSeq1(seqRepo.getSeq1()));
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onWhere() {
         try {
-            appendFuncOutput(model.whereSeq1());
+            appendFuncOutput(FunctionalEngine::whereSeq1(seqRepo.getSeq1()));
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onReduce() {
         try {
-            appendFuncOutput(model.reduceSeq1());
+            appendFuncOutput(FunctionalEngine::reduceSeq1(seqRepo.getSeq1()));
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onZip() {
         try {
-            appendFuncOutput(model.zipSeq1Seq2());
+            appendFuncOutput(FunctionalEngine::zipSeq1Seq2(seqRepo.getSeq1(), seqRepo.getSeq2()));
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onSplit() {
         try {
-            appendFuncOutput(model.splitSeq1());
+            appendFuncOutput(FunctionalEngine::splitSeq1(seqRepo.getSeq1()));
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onUnzip() {
+        try {
+            appendFuncOutput(FunctionalEngine::unzipSeq1Seq2(seqRepo.getSeq1(), seqRepo.getSeq2()));
+        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
+    }
+    void onDemoIterators() {
+        try {
+            appendFuncOutput(FunctionalEngine::demoIterators(seqRepo.getSeq1()));
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
 
@@ -528,10 +551,7 @@ private:
             DynamicArray<int> vals;
             bool tooBig = false;
             while (ss >> num) {
-                if (num > 40000 || num < -40000) {
-                    tooBig = true;
-                    break;
-                }
+                if (num > 40000 || num < -40000) { tooBig = true; break; }
                 vals.Append(num);
             }
             if (tooBig) {
@@ -540,20 +560,18 @@ private:
                 return;
             }
             if (vals.GetSize() > 0) {
-                model.addToSeq1(&vals.Get(0), static_cast<int>(vals.GetSize()));
+                seqRepo.addToSeq1(&vals.Get(0), static_cast<int>(vals.GetSize()));
             }
-            appendFuncOutputParts("Seq1 добавлены: ", model.seq1ToString());
+            appendFuncOutputParts("Seq1 добавлены: ", seqRepo.seq1ToString());
             seq1Entry.set_text("");
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onSeq1Clear() {
         try {
-            model.clearSeq1();
+            seqRepo.clearSeq1();
             appendFuncOutputParts("Seq1 очищена");
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onSeq2Add() {
         try {
             std::string inp = seq2Entry.get_text();
@@ -562,10 +580,7 @@ private:
             DynamicArray<int> vals;
             bool tooBig = false;
             while (ss >> num) {
-                if (num > 40000 || num < -40000) {
-                    tooBig = true;
-                    break;
-                }
+                if (num > 40000 || num < -40000) { tooBig = true; break; }
                 vals.Append(num);
             }
             if (tooBig) {
@@ -574,29 +589,16 @@ private:
                 return;
             }
             if (vals.GetSize() > 0) {
-                model.addToSeq2(&vals.Get(0), static_cast<int>(vals.GetSize()));
+                seqRepo.addToSeq2(&vals.Get(0), static_cast<int>(vals.GetSize()));
             }
-            appendFuncOutputParts("Seq2 добавлены: ", model.seq2ToString());
+            appendFuncOutputParts("Seq2 добавлены: ", seqRepo.seq2ToString());
             seq2Entry.set_text("");
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
-
     void onSeq2Clear() {
         try {
-            model.clearSeq2();
+            seqRepo.clearSeq2();
             appendFuncOutputParts("Seq2 очищена");
-        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
-    }
-
-    void onDemoIterators() {
-        try {
-            appendFuncOutput(model.demoIterators());
-        } catch (const std::exception& e) { appendFuncOutput(e.what()); }
-    }
-
-    void onUnzip() {
-        try {
-            appendFuncOutput(model.unzipSeq1Seq2());
         } catch (const std::exception& e) { appendFuncOutput(e.what()); }
     }
 
@@ -607,12 +609,12 @@ private:
         matrixEntries.Clear();
         std::vector<Gtk::Widget*> children = matrixInputGrid.get_children();
         for (auto c : children) matrixInputGrid.remove(*c);
-        int n = model.matrixSize();
+        int n = doubleMatrixRepo.size();
         for (int i = 0; i < n; ++i) {
             DynamicArray<Gtk::Entry*> row;
             for (int j = 0; j < n; ++j) {
                 Gtk::Entry* e = Gtk::make_managed<Gtk::Entry>();
-                e->set_text(std::to_string(model.matrixGet(i, j)));
+                e->set_text(std::to_string(doubleMatrixRepo.get(i, j)));
                 e->set_hexpand(true);
                 e->set_vexpand(false);
                 row.Append(e);
@@ -624,12 +626,12 @@ private:
     }
 
     void printMatrix() {
-        int n = model.matrixSize();
+        int n = doubleMatrixRepo.size();
         for (int i = 0; i < n; ++i) {
             std::stringstream ss;
             ss << "[";
             for (int j = 0; j < n; ++j) {
-                ss << model.matrixGet(i, j);
+                ss << doubleMatrixRepo.get(i, j);
                 if (j < n-1) ss << ", ";
             }
             ss << "]";
@@ -641,154 +643,137 @@ private:
         try {
             int n = safe_stoi(matrixSizeEntry.get_text(), "размер матрицы", false);
             if (n <= 0) throw InvalidArgumentError("Размер матрицы должен быть положительным");
-            model.matrixCreate(n);
+            doubleMatrixRepo.create(n);
             rebuildMatrixInputGrid();
             appendParts("Создана матрица ", n, "x", n);
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixInit() {
         try {
-            if (model.matrixSize() == 0) {
+            if (doubleMatrixRepo.size() == 0) {
                 appendMatrixOutputLine("Сначала создайте матрицу");
                 return;
             }
             std::string inp = matrixInitEntry.get_text();
-            model.matrixInitFromString(inp);
+            doubleMatrixRepo.initFromString(inp);
             rebuildMatrixInputGrid();
             appendMatrixOutputLine("Значения матрицы обновлены");
             printMatrix();
             matrixInitEntry.set_text("");
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixAdd() {
         try {
-            int n = model.matrixSize();
+            int n = doubleMatrixRepo.size();
             if (n == 0) {
                 appendMatrixOutputLine("Сначала создайте матрицу");
                 return;
             }
-            DynamicArray<DynamicArray<double>> uiValues;
-            for (int i = 0; i < n; ++i) {
-                DynamicArray<double> row;
+            SquareMatrix<double> other(n);
+            for (int i = 0; i < n; ++i)
                 for (int j = 0; j < n; ++j) {
                     double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(),
                         "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
-                    row.Append(val);
+                    other.Set(i, j, val);
                 }
-                uiValues.Append(row);
-            }
-            model.matrixAddFromUI(uiValues);
+            doubleMatrixRepo.getMatrix() = doubleMatrixRepo.getMatrix().Add(other);
             rebuildMatrixInputGrid();
             appendMatrixOutputLine("Результат сложения:");
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixScalar() {
         try {
             double s = safe_stod(scalarEntry.get_text(), "скаляр");
-            model.matrixMultiplyByScalar(s);
+            doubleMatrixRepo.getMatrix() = doubleMatrixRepo.getMatrix().MultiplyByScalar(s);
             rebuildMatrixInputGrid();
             appendParts("Результат умножения на ", s, ":");
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixNorm() {
         try {
-            appendParts("Норма матрицы: ", model.matrixNorm());
+            appendParts("Норма матрицы: ", doubleMatrixRepo.getMatrix().Norm());
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixSwapRows() {
         try {
             int i = safe_stoi(rowIndexEntry.get_text(), "первая строка", false);
             int j = safe_stoi(targetEntry.get_text(), "вторая строка", false);
-            model.matrixSwapRows(i, j);
+            doubleMatrixRepo.getMatrix().SwapRows(i, j);
             rebuildMatrixInputGrid();
             appendParts("Строки ", i, " и ", j, " поменяны местами");
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixMultiplyRow() {
         try {
             int i = safe_stoi(rowIndexEntry.get_text(), "индекс строки", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
-            model.matrixMultiplyRow(i, f);
+            doubleMatrixRepo.getMatrix().MultiplyRow(i, f);
             rebuildMatrixInputGrid();
             appendParts("Строка ", i, " умножена на ", f);
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixAddRow() {
         try {
             int t = safe_stoi(targetEntry.get_text(), "строка-получатель", false);
             int s = safe_stoi(sourceEntry.get_text(), "строка-источник", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
-            model.matrixAddRow(t, s, f);
+            doubleMatrixRepo.getMatrix().AddRow(t, s, f);
             rebuildMatrixInputGrid();
             appendParts("К строке ", t, " прибавлена строка ", s, " * ", f);
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixSwapCols() {
         try {
             int i = safe_stoi(rowIndexEntry.get_text(), "первый столбец", false);
             int j = safe_stoi(targetEntry.get_text(), "второй столбец", false);
-            model.matrixSwapCols(i, j);
+            doubleMatrixRepo.getMatrix().SwapCols(i, j);
             rebuildMatrixInputGrid();
             appendParts("Столбцы ", i, " и ", j, " поменяны местами");
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixMultiplyCol() {
         try {
             int j = safe_stoi(rowIndexEntry.get_text(), "индекс столбца", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
-            model.matrixMultiplyCol(j, f);
+            doubleMatrixRepo.getMatrix().MultiplyCol(j, f);
             rebuildMatrixInputGrid();
             appendParts("Столбец ", j, " умножен на ", f);
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixAddCol() {
         try {
             int t = safe_stoi(targetEntry.get_text(), "столбец-получатель", false);
             int s = safe_stoi(sourceEntry.get_text(), "столбец-источник", false);
             double f = safe_stod(factorEntry.get_text(), "множитель");
-            model.matrixAddCol(t, s, f);
+            doubleMatrixRepo.getMatrix().AddCol(t, s, f);
             rebuildMatrixInputGrid();
             appendParts("К столбцу ", t, " прибавлен столбец ", s, " * ", f);
             printMatrix();
         } catch (const std::exception& e) { appendMatrixOutputLine(e.what()); }
     }
-
     void onMatrixMultiply() {
         try {
-            int n = model.matrixSize();
+            int n = doubleMatrixRepo.size();
             if (n == 0) {
                 appendMatrixOutputLine("Сначала создайте матрицу");
                 return;
             }
-            DynamicArray<DynamicArray<double>> uiValues;
-            for (int i = 0; i < n; ++i) {
-                DynamicArray<double> row;
+            SquareMatrix<double> other(n);
+            for (int i = 0; i < n; ++i)
                 for (int j = 0; j < n; ++j) {
                     double val = safe_stod(matrixEntries.Get(i).Get(j)->get_text(),
                         "ячейка["+std::to_string(i)+"]["+std::to_string(j)+"]");
-                    row.Append(val);
+                    other.Set(i, j, val);
                 }
-                uiValues.Append(row);
-            }
-            model.matrixMultiplyMatrices(uiValues);
+            doubleMatrixRepo.getMatrix() = doubleMatrixRepo.getMatrix().Multiply(other);
             rebuildMatrixInputGrid();
             appendMatrixOutputLine("Результат умножения матриц:");
             printMatrix();
@@ -802,7 +787,7 @@ private:
         complexMatrixCells.Clear();
         std::vector<Gtk::Widget*> children = complexMatrixInputGrid.get_children();
         for (auto c : children) complexMatrixInputGrid.remove(*c);
-        int n = model.complexMatrixSize();
+        int n = complexMatrixRepo.size();
         if (n == 0) return;
         for (int i = 0; i < n; ++i) {
             DynamicArray<Gtk::Box*> row;
@@ -810,7 +795,7 @@ private:
                 Gtk::Box* box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 2);
                 Gtk::Entry* reEntry = Gtk::make_managed<Gtk::Entry>();
                 Gtk::Entry* imEntry = Gtk::make_managed<Gtk::Entry>();
-                Complex val = model.complexMatrixGet(i, j);
+                Complex val = complexMatrixRepo.get(i, j);
                 reEntry->set_text(std::to_string(val.real()));
                 imEntry->set_text(std::to_string(val.imag()));
                 reEntry->set_hexpand(true);
@@ -828,12 +813,12 @@ private:
     }
 
     void printComplexMatrix() {
-        int n = model.complexMatrixSize();
+        int n = complexMatrixRepo.size();
         for (int i = 0; i < n; ++i) {
             std::stringstream ss;
             ss << "[";
             for (int j = 0; j < n; ++j) {
-                ss << model.complexMatrixGet(i, j).to_string();
+                ss << complexMatrixRepo.get(i, j).to_string();
                 if (j < n-1) ss << ", ";
             }
             ss << "]";
@@ -845,22 +830,21 @@ private:
         try {
             int n = safe_stoi(complexMatrixSizeEntry.get_text(), "размер матрицы", false);
             if (n <= 0) throw InvalidArgumentError("Размер матрицы должен быть положительным");
-            model.complexMatrixCreate(n);
+            complexMatrixRepo.create(n);
             rebuildComplexMatrixInputGrid();
             appendParts("Создана комплексная матрица ", n, "x", n);
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixInit() {
         try {
-            if (model.complexMatrixSize() == 0) {
+            if (complexMatrixRepo.size() == 0) {
                 appendComplexMatrixOutputLine("Сначала создайте матрицу");
                 return;
             }
             std::string reStr = complexMatrixInitReEntry.get_text();
             std::string imStr = complexMatrixInitImEntry.get_text();
-            model.complexMatrixInitFromString(reStr, imStr);
+            complexMatrixRepo.initFromStrings(reStr, imStr);
             rebuildComplexMatrixInputGrid();
             appendComplexMatrixOutputLine("Значения комплексной матрицы обновлены");
             printComplexMatrix();
@@ -868,139 +852,123 @@ private:
             complexMatrixInitImEntry.set_text("");
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixAdd() {
         try {
-            int n = model.complexMatrixSize();
+            int n = complexMatrixRepo.size();
             if (n == 0) {
                 appendComplexMatrixOutputLine("Сначала создайте матрицу");
                 return;
             }
-            DynamicArray<DynamicArray<std::pair<double, double>>> uiValues;
-            for (int i = 0; i < n; ++i) {
-                DynamicArray<std::pair<double, double>> row;
+            SquareMatrix<Complex> other(n);
+            for (int i = 0; i < n; ++i)
                 for (int j = 0; j < n; ++j) {
                     Gtk::Box* box = complexMatrixCells.Get(i).Get(j);
                     Gtk::Entry* reEntry = static_cast<Gtk::Entry*>(box->get_children()[0]);
                     Gtk::Entry* imEntry = static_cast<Gtk::Entry*>(box->get_children()[1]);
                     double re = safe_stod(reEntry->get_text(), "Re["+std::to_string(i)+"]["+std::to_string(j)+"]");
                     double im = safe_stod(imEntry->get_text(), "Im["+std::to_string(i)+"]["+std::to_string(j)+"]");
-                    row.Append({re, im});
+                    other.Set(i, j, Complex(re, im));
                 }
-                uiValues.Append(row);
-            }
-            model.complexMatrixAddFromUI(uiValues);
+            complexMatrixRepo.getMatrix() = complexMatrixRepo.getMatrix().Add(other);
             rebuildComplexMatrixInputGrid();
             appendComplexMatrixOutputLine("Результат сложения комплексных матриц:");
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixScalar() {
         try {
             double s = safe_stod(complexScalarEntry.get_text(), "скаляр");
-            model.complexMatrixMultiplyByScalar(s);
+            complexMatrixRepo.getMatrix() = complexMatrixRepo.getMatrix().MultiplyByScalar(Complex(s, 0));
             rebuildComplexMatrixInputGrid();
             appendParts("Результат умножения комплексной матрицы на скаляр ", s, ":");
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixNorm() {
         try {
-            appendParts("Норма комплексной матрицы: ", model.complexMatrixNorm());
+            appendParts("Норма комплексной матрицы: ", complexMatrixRepo.getMatrix().Norm());
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixSwapRows() {
         try {
             int i = safe_stoi(complexRowIndexEntry.get_text(), "первая строка", false);
             int j = safe_stoi(complexTargetEntry.get_text(), "вторая строка", false);
-            model.complexMatrixSwapRows(i, j);
+            complexMatrixRepo.getMatrix().SwapRows(i, j);
             rebuildComplexMatrixInputGrid();
             appendParts("Строки ", i, " и ", j, " поменяны местами");
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixMultiplyRow() {
         try {
             int i = safe_stoi(complexRowIndexEntry.get_text(), "индекс строки", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
-            model.complexMatrixMultiplyRow(i, f);
+            complexMatrixRepo.getMatrix().MultiplyRow(i, Complex(f, 0));
             rebuildComplexMatrixInputGrid();
             appendParts("Строка ", i, " умножена на ", f);
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixAddRow() {
         try {
             int t = safe_stoi(complexTargetEntry.get_text(), "строка-получатель", false);
             int s = safe_stoi(complexSourceEntry.get_text(), "строка-источник", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
-            model.complexMatrixAddRow(t, s, f);
+            complexMatrixRepo.getMatrix().AddRow(t, s, Complex(f, 0));
             rebuildComplexMatrixInputGrid();
             appendParts("К строке ", t, " прибавлена строка ", s, " * ", f);
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixSwapCols() {
         try {
             int i = safe_stoi(complexRowIndexEntry.get_text(), "первый столбец", false);
             int j = safe_stoi(complexTargetEntry.get_text(), "второй столбец", false);
-            model.complexMatrixSwapCols(i, j);
+            complexMatrixRepo.getMatrix().SwapCols(i, j);
             rebuildComplexMatrixInputGrid();
             appendParts("Столбцы ", i, " и ", j, " поменяны местами");
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixMultiplyCol() {
         try {
             int j = safe_stoi(complexRowIndexEntry.get_text(), "индекс столбца", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
-            model.complexMatrixMultiplyCol(j, f);
+            complexMatrixRepo.getMatrix().MultiplyCol(j, Complex(f, 0));
             rebuildComplexMatrixInputGrid();
             appendParts("Столбец ", j, " умножен на ", f);
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixAddCol() {
         try {
             int t = safe_stoi(complexTargetEntry.get_text(), "столбец-получатель", false);
             int s = safe_stoi(complexSourceEntry.get_text(), "столбец-источник", false);
             double f = safe_stod(complexFactorEntry.get_text(), "множитель");
-            model.complexMatrixAddCol(t, s, f);
+            complexMatrixRepo.getMatrix().AddCol(t, s, Complex(f, 0));
             rebuildComplexMatrixInputGrid();
             appendParts("К столбцу ", t, " прибавлен столбец ", s, " * ", f);
             printComplexMatrix();
         } catch (const std::exception& e) { appendComplexMatrixOutputLine(e.what()); }
     }
-
     void onComplexMatrixMultiply() {
         try {
-            int n = model.complexMatrixSize();
+            int n = complexMatrixRepo.size();
             if (n == 0) {
                 appendComplexMatrixOutputLine("Сначала создайте матрицу");
                 return;
             }
-            DynamicArray<DynamicArray<std::pair<double, double>>> uiValues;
-            for (int i = 0; i < n; ++i) {
-                DynamicArray<std::pair<double, double>> row;
+            SquareMatrix<Complex> other(n);
+            for (int i = 0; i < n; ++i)
                 for (int j = 0; j < n; ++j) {
                     Gtk::Box* box = complexMatrixCells.Get(i).Get(j);
                     Gtk::Entry* reEntry = static_cast<Gtk::Entry*>(box->get_children()[0]);
                     Gtk::Entry* imEntry = static_cast<Gtk::Entry*>(box->get_children()[1]);
                     double re = safe_stod(reEntry->get_text(), "Re["+std::to_string(i)+"]["+std::to_string(j)+"]");
                     double im = safe_stod(imEntry->get_text(), "Im["+std::to_string(i)+"]["+std::to_string(j)+"]");
-                    row.Append({re, im});
+                    other.Set(i, j, Complex(re, im));
                 }
-                uiValues.Append(row);
-            }
-            model.complexMatrixMultiplyMatrices(uiValues);
+            complexMatrixRepo.getMatrix() = complexMatrixRepo.getMatrix().Multiply(other);
             rebuildComplexMatrixInputGrid();
             appendComplexMatrixOutputLine("Результат умножения комплексных матриц:");
             printComplexMatrix();
@@ -1028,7 +996,7 @@ public:
         listConcatButton("Склеить"), listSubseqButton("Подпоследовательность"), listClearButton("Очистить"),
         mutableAppendButton("Добавить в конец"), mutablePrependButton("Добавить в начало"), mutableInsertButton("Вставить"),
         immutableAppendButton("Добавить в конец"), immutablePrependButton("Добавить в начало"), immutableInsertButton("Вставить"),
-        bitSetButton("Установить бит"), bitAndButton("И"), bitOrButton("ИЛИ"), bitXorButton("ИСКЛЮЧАЮЩЕЕ ИЛИ"), bitNotButton("НЕ"),
+        bitSetButton("Установить бит"), bitAndButton("И"), bitOrButton("ИЛИ"), bitXorButton("ИСКЛЮЧАЮЩЕЕ ИЛИ"), bitNotButton("НЕ"), bitClearButton("Очистить"),
         mapButton("Map"), whereButton("Where"), reduceButton("Reduce"), zipButton("Zip"), splitButton("Split по нулю"),
         seq1AddButton("Добавить в Seq1"), seq1ClearButton("Очистить Seq1"),
         seq2AddButton("Добавить в Seq2"), seq2ClearButton("Очистить Seq2"),
@@ -1163,6 +1131,7 @@ public:
         bitBottomBox.pack_start(bitOrButton, Gtk::PACK_SHRINK, 5);
         bitBottomBox.pack_start(bitXorButton, Gtk::PACK_SHRINK, 5);
         bitBottomBox.pack_start(bitNotButton, Gtk::PACK_SHRINK, 5);
+        bitBottomBox.pack_start(bitClearButton, Gtk::PACK_SHRINK, 5);
         bitPage.pack_start(bitTopBox, Gtk::PACK_SHRINK, 5);
         bitPage.pack_start(bitScroll, Gtk::PACK_EXPAND_WIDGET, 5);
         bitPage.pack_start(bitBottomBox, Gtk::PACK_SHRINK, 5);
@@ -1204,6 +1173,28 @@ public:
         squareMatrixScroll.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
         squareMatrixScroll.set_hexpand(true);
         squareMatrixScroll.set_vexpand(true);
+
+        matrixSizeEntry.set_hexpand(false);
+        matrixSizeEntry.set_vexpand(false);
+        matrixSizeEntry.set_width_chars(5);
+        scalarEntry.set_hexpand(false);
+        scalarEntry.set_vexpand(false);
+        scalarEntry.set_width_chars(10);
+        rowIndexEntry.set_hexpand(false);
+        rowIndexEntry.set_vexpand(false);
+        rowIndexEntry.set_width_chars(5);
+        targetEntry.set_hexpand(false);
+        targetEntry.set_vexpand(false);
+        targetEntry.set_width_chars(5);
+        sourceEntry.set_hexpand(false);
+        sourceEntry.set_vexpand(false);
+        sourceEntry.set_width_chars(5);
+        factorEntry.set_hexpand(false);
+        factorEntry.set_vexpand(false);
+        factorEntry.set_width_chars(10);
+        matrixInitEntry.set_hexpand(true);
+        matrixInitEntry.set_vexpand(false);
+        matrixInitEntry.set_width_chars(30);
 
         squareMatrixTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK, 5);
         squareMatrixTopBox.pack_start(matrixSizeEntry, Gtk::PACK_SHRINK, 5);
@@ -1247,7 +1238,30 @@ public:
         complexMatrixScroll.set_hexpand(true);
         complexMatrixScroll.set_vexpand(true);
 
-
+        complexMatrixSizeEntry.set_hexpand(false);
+        complexMatrixSizeEntry.set_vexpand(false);
+        complexMatrixSizeEntry.set_width_chars(5);
+        complexScalarEntry.set_hexpand(false);
+        complexScalarEntry.set_vexpand(false);
+        complexScalarEntry.set_width_chars(10);
+        complexRowIndexEntry.set_hexpand(false);
+        complexRowIndexEntry.set_vexpand(false);
+        complexRowIndexEntry.set_width_chars(5);
+        complexTargetEntry.set_hexpand(false);
+        complexTargetEntry.set_vexpand(false);
+        complexTargetEntry.set_width_chars(5);
+        complexSourceEntry.set_hexpand(false);
+        complexSourceEntry.set_vexpand(false);
+        complexSourceEntry.set_width_chars(5);
+        complexFactorEntry.set_hexpand(false);
+        complexFactorEntry.set_vexpand(false);
+        complexFactorEntry.set_width_chars(10);
+        complexMatrixInitReEntry.set_hexpand(true);
+        complexMatrixInitReEntry.set_vexpand(false);
+        complexMatrixInitReEntry.set_width_chars(30);
+        complexMatrixInitImEntry.set_hexpand(true);
+        complexMatrixInitImEntry.set_vexpand(false);
+        complexMatrixInitImEntry.set_width_chars(30);
 
         complexMatrixTopBox.pack_start(*makeLabel("Размер:"), Gtk::PACK_SHRINK, 5);
         complexMatrixTopBox.pack_start(complexMatrixSizeEntry, Gtk::PACK_SHRINK, 5);
@@ -1314,6 +1328,7 @@ public:
         bitOrButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitOr));
         bitXorButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitXor));
         bitNotButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitNot));
+        bitClearButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onBitClear));
 
         mapButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onMap));
         whereButton.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onWhere));
@@ -1358,7 +1373,7 @@ public:
         appendArrayOutput("Программа запущена");
         appendListOutput("Программа запущена");
         appendMutableOutput("Программа запущена");
-        appendImmutableOutput("Программа запущена. Начальная последовательность: " + model.immutableToString());
+        appendImmutableOutput("Программа запущена. Начальная последовательность: " + seqRepo.immutableToString());
         appendBitOutput("Программа запущена");
         appendFuncOutput("Программа запущена");
         appendParts("Вкладка SquareMatrix готова");

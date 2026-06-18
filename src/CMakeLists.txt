@@ -1,23 +1,19 @@
 add_library(data_structures
     BitSequence.cpp
     LinkedList.cpp
-    ApplicationModel.cpp
+    ../repositories/SequenceRepository.cpp
+    ../repositories/DoubleMatrixRepository.cpp
+    ../repositories/ComplexMatrixRepository.cpp
+    FunctionalEngine.cpp
 )
 
 target_include_directories(data_structures PUBLIC
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/repositories  
 )
 
 target_compile_options(data_structures PUBLIC
     -Wall -Wextra -Wpedantic -O2
-)
-
-add_executable(lab2_ui
-    main.cpp
-)
-
-target_link_libraries(lab2_ui
-    data_structures
 )
 
 find_package(PkgConfig REQUIRED)
@@ -29,6 +25,7 @@ add_executable(lab2_gtk
 
 target_include_directories(lab2_gtk PRIVATE
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/repositories  
     ${GTKMM_INCLUDE_DIRS}
 )
 
@@ -37,10 +34,6 @@ target_link_libraries(lab2_gtk PRIVATE
     ${GTKMM_LIBRARIES}
 )
 
-target_compile_options(lab2_gtk PRIVATE
-    ${GTKMM_CFLAGS_OTHER}
-    -Wall -Wextra -Wpedantic
-)
 target_compile_options(lab2_gtk PRIVATE
     ${GTKMM_CFLAGS_OTHER}
     -Wall -Wextra -Wpedantic -Wno-reorder

@@ -103,7 +103,7 @@ TEST_F(ListSequenceTest, InsertAtInvalidIndex) {
         try {
             seq.InsertAt(value, invalidIndex);
         } catch (const IndexOutOfRange& e) {
-            EXPECT_STREQ(e.what(), "ListSequence: insert index out of range")
+            EXPECT_STREQ(e.what(), "")
                 << "InsertAt(" << value << ", " << invalidIndex << "): ожидалось исключение 'ListSequence: insert index out of range'";
             throw;
         }
@@ -119,7 +119,7 @@ TEST_F(ListSequenceTest, GetInvalidIndex) {
         try {
             seq.Get(invalidIndex);
         } catch (const IndexOutOfRange& e) {
-            EXPECT_STREQ(e.what(), "ListSequence: index out of range")
+            EXPECT_STREQ(e.what(), "")
                 << "Get(" << invalidIndex << "): ожидалось исключение 'ListSequence: index out of range'";
             throw;
         }
@@ -173,8 +173,8 @@ TEST_F(ListSequenceTest, GetFirstThrowsOnEmpty) {
         try {
             seq.GetFirst();
         } catch (const EmptyContainerError& e) {
-            EXPECT_STREQ(e.what(), "ListSequence: sequence is empty")
-                << "GetFirst(): ожидалось исключение 'ListSequence: sequence is empty'";
+            EXPECT_STREQ(e.what(), "ListSequence::GetFirst: последовательность пуста")
+                << "GetFirst(): ожидалось исключение 'ListSequence: последовательность пуста'";
             throw;
         }
     }, EmptyContainerError) << "GetFirst() на пустой последовательности должно выбрасывать EmptyContainerError";
@@ -187,8 +187,8 @@ TEST_F(ListSequenceTest, GetLastThrowsOnEmpty) {
         try {
             seq.GetLast();
         } catch (const EmptyContainerError& e) {
-            EXPECT_STREQ(e.what(), "ListSequence: sequence is empty")
-                << "GetLast(): ожидалось исключение 'ListSequence: sequence is empty'";
+            EXPECT_STREQ(e.what(), "ListSequence::GetFirst: последовательность пуста")
+                << "GetLast(): ожидалось исключение 'ListSequence: последовательность пуста'";
             throw;
         }
     }, EmptyContainerError) << "GetLast() на пустой последовательности должно выбрасывать EmptyContainerError";

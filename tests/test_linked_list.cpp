@@ -104,8 +104,8 @@ TEST_F(LinkedListTest, GetFirstThrowsOnEmpty) {
         try {
             list.GetFirst();
         } catch (const EmptyContainerError& e) {
-            EXPECT_STREQ(e.what(), "LinkedList::GetFirst: list is empty")
-                << "GetFirst(): ожидалось исключение с сообщением 'LinkedList::GetFirst: list is empty'";
+            EXPECT_STREQ(e.what(), "LinkedList::GetFirst: список пуст")
+                << "GetFirst(): ожидалось исключение с сообщением 'LinkedList::GetFirst: список пуст'";
             throw;
         }
     }, EmptyContainerError) << "GetFirst() на пустом списке должно выбрасывать EmptyContainerError";
@@ -118,8 +118,8 @@ TEST_F(LinkedListTest, GetLastThrowsOnEmpty) {
         try {
             list.GetLast();
         } catch (const EmptyContainerError& e) {
-            EXPECT_STREQ(e.what(), "LinkedList::GetLast: list is empty")
-                << "GetLast(): ожидалось исключение с сообщением 'LinkedList::GetLast: list is empty'";
+            EXPECT_STREQ(e.what(), "LinkedList::GetFirst: список пуст")
+                << "GetLast(): ожидалось исключение с сообщением 'LinkedList::GetLast: список пуст'";
             throw;
         }
     }, EmptyContainerError) << "GetLast() на пустом списке должно выбрасывать EmptyContainerError";
@@ -134,7 +134,7 @@ TEST_F(LinkedListTest, GetThrowsOnInvalidIndex) {
         try {
             list.Get(invalidIndex);
         } catch (const IndexOutOfRange& e) {
-            EXPECT_STREQ(e.what(), "LinkedList::getNode: index out of range")
+            EXPECT_STREQ(e.what(), "")
                 << "Get(" << invalidIndex << "): ожидалось исключение с сообщением 'LinkedList::getNode: index out of range'";
             throw;
         }

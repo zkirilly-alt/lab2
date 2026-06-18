@@ -157,7 +157,7 @@ TEST(BitSequenceTest, AndThrowsOnSizeMismatch) {
     BitSequence a(5);
     BitSequence b(3);
     
-    EXPECT_THROW(a & b, InvalidArgumentError);
+    EXPECT_THROW(a & b, LengthMismatchException);
 }
 
 TEST(BitSequenceTest, GetSubsequence) {
